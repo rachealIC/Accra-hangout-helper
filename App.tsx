@@ -4,17 +4,18 @@ import {
   TIME_WINDOW_OPTIONS,
   BUDGET_OPTIONS,
   AUDIENCE_OPTIONS,
+  ROMANTIC_AUDIENCE_OPTIONS,
   TIMING_OPTIONS,
   DATE_MEAL_OPTIONS,
 } from './constants';
 import type { HangoutParams, HistoryItem } from './types';
 import { generatePlanOptions, getTravelDetails } from './services/geminiService';
 import PlanDisplay from './components/PlanDisplay';
-import WhimsicalBackground from './components/WhimsicalBackground';
 import DynamicLoading from './components/DynamicLoading';
 import HistoryPanel from './components/HistoryPanel';
 import Confetti from './components/Confetti';
 import { HistoryIcon } from './components/Icons';
+import LandingTrotro from './components/LandingTrotro';
 
 type AppState = 'WELCOME' | 'GATHERING_INPUT' | 'LOADING' | 'SHOWING_OPTIONS' | 'ASKING_LOCATION' | 'SHOWING_FINAL_PLAN' | 'ERROR';
 
@@ -38,6 +39,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -59,25 +61,24 @@ const App: React.FC = () => {
       },
       (err) => {
         console.error("Error getting location: ", err);
-        setLocationError("Enable location for better suggestions.");
+        setLocationError("Enable location for better, closer suggestions!");
       }
     );
   }, []);
 
   const questions = useMemo(() => {
       const audienceQuestion = params.vibe === 'Romantic Date'
-        ? { key: 'audience', options: ["Just the Two of Us", "It's a Double Date"], prompt: 'And who is this romantic date for?' }
-        : { key: 'audience', options: AUDIENCE_OPTIONS, prompt: 'Who you rolling with?' };
+        ? { key: 'audience', options: ROMANTIC_AUDIENCE_OPTIONS, prompt: 'And who is this romantic date for?' }
+        : { key: 'audience', options: AUDIENCE_OPTIONS, prompt: 'Who are you rolling with?' };
 
-      const baseQuestions = [
+      return [
         { key: 'vibe', options: VIBE_OPTIONS, prompt: "First, what's the vibe?" },
         ...(params.vibe === 'Romantic Date' ? [{ key: 'dateMeal', options: DATE_MEAL_OPTIONS, prompt: 'Perfect! What time of day?' }] : []),
-        { key: 'timeWindow', options: TIME_WINDOW_OPTIONS, prompt: 'How much time you got?' },
-        { key: 'budget', options: BUDGET_OPTIONS.map(o => o.name), prompt: 'How deep are your pockets?' },
+        { key: 'timeWindow', options: TIME_WINDOW_OPTIONS, prompt: 'How much time have you got?' },
+        { key: 'budget', options: BUDGET_OPTIONS, prompt: 'How deep are your pockets?' },
         audienceQuestion,
         { key: 'timing', options: TIMING_OPTIONS, prompt: 'And when are we doing this?' },
       ];
-      return baseQuestions;
   }, [params.vibe]);
   
   const getStepLabel = (key: string): string => {
@@ -93,31 +94,42 @@ const App: React.FC = () => {
   };
 
   const handleOptionSelect = (key: keyof HangoutParams, value: any) => {
-    const newParams = { ...params, [key]: value };
-    setParams(newParams);
-    addToHistory({ type: 'user', label: `Selected ${getStepLabel(key)}`, content: value });
+    setIsTransitioning(true);
+    setTimeout(() => {
+        const newParams = { ...params, [key]: value };
+        setParams(newParams);
+        const selectedOption = questions[currentStep].options.find(o => o.value === value);
+        addToHistory({ type: 'user', label: `Selected ${getStepLabel(key)}`, content: selectedOption?.name || value });
 
-    const isLastQuestion = currentStep >= questions.length - 1;
+        const isLastQuestion = currentStep >= questions.length - 1;
 
-    if (isLastQuestion) {
-      handleSubmit({ ...newParams, proximity: 'any' });
-    } else {
-      setCurrentStep(currentStep + 1);
-    }
+        if (isLastQuestion) {
+          handleSubmit({ ...newParams, proximity: 'any' });
+        } else {
+          setCurrentStep(currentStep + 1);
+        }
+        setIsTransitioning(false);
+    }, 300);
   };
   
   const handleBack = () => {
-    if (currentStep > 0) {
-      if(questions[currentStep].key === 'dateMeal') {
-          setParams({...params, vibe: '', dateMeal: ''});
-      }
-      setCurrentStep(currentStep - 1);
-    }
+    setIsTransitioning(true);
+    setTimeout(() => {
+        if (currentStep > 0) {
+          const previousKey = questions[currentStep - 1].key as keyof HangoutParams;
+          // Reset the data for the step we are leaving, for a cleaner state
+          if (params[previousKey]) {
+            setParams(prev => ({...prev, [previousKey]: ''}));
+          }
+          setCurrentStep(currentStep - 1);
+        }
+        setIsTransitioning(false);
+    }, 300);
   };
 
-  const handleSurpriseMe = (key: keyof HangoutParams, options: readonly string[]) => {
+  const handleSurpriseMe = (key: keyof HangoutParams, options: readonly {name: string, value: any}[]) => {
     const randomIndex = Math.floor(Math.random() * options.length);
-    const randomOption = options[randomIndex];
+    const randomOption = options[randomIndex].value;
     handleOptionSelect(key, randomOption);
   };
 
@@ -180,15 +192,20 @@ const App: React.FC = () => {
   const mainContent = () => {
     if (appState === 'WELCOME') {
         return (
-            <div className="flex flex-col items-center justify-center text-center p-4 h-full z-10 animate-slide-in">
-                <div className="w-full max-w-2xl mx-auto">
-                    <h1 className="text-5xl sm:text-6xl font-extrabold text-[#3E0703] mb-4">Accra Vibe Planner</h1>
-                    <p className="text-[#660B05] text-lg mb-8 max-w-lg mx-auto">
-                        Finally, a planner that understands Accra traffic... your introverted soul, your group indecisions and find the perfect spot for you.
+            <div className="flex flex-col items-center justify-center text-center p-4 z-10 animate-slide-in">
+                <div className="relative w-full h-40 md:h-48">
+                    <LandingTrotro />
+                </div>
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-[#3E0703] mb-4">
+                        Accra Vibe Planner
+                    </h1>
+                    <p className="text-[#660B05] text-xl mb-8 max-w-lg mx-auto">
+                        Finally, a planner that gets Accra traffic, your introverted soul, and your group's indecision. Let's find the perfect spot.
                     </p>
                     <button
                         onClick={() => setAppState('GATHERING_INPUT')}
-                        className="px-8 py-4 rounded-lg text-xl font-bold transition-all duration-300 transform hover:scale-105 bg-[#8C1007] text-white border-[#8C1007] shadow-lg"
+                        className="px-8 py-4 rounded-lg text-xl font-bold transition-all duration-300 transform hover:scale-105 bg-[#8C1007] text-white border-[#8C1007] shadow-lg animate-pulse-subtle"
                     >
                         Let's Go!
                     </button>
@@ -217,7 +234,7 @@ const App: React.FC = () => {
           <div className="flex flex-col justify-center items-center p-4 h-full z-10">
                <div className="w-full max-w-md bg-white/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 text-center animate-slide-in">
                    <h2 className="text-2xl font-bold text-[#3E0703] mb-4">One last thing...</h2>
-                   <p className="text-[#660B05] mb-6 text-lg">To calculate the travel time and traffic, where will you be coming from?</p>
+                   <p className="text-[#660B05] mb-6 text-lg">To calculate the travel time and traffic, where will you be starting from?</p>
                    <input
                       type="text"
                       value={userOrigin}
@@ -242,9 +259,9 @@ const App: React.FC = () => {
     if (appState === 'ERROR') {
         return (
            <div className="flex flex-col justify-center items-center text-center p-4 h-full z-10">
-               <div className="w-full max-w-md bg-white/80 p-8 rounded-lg shadow-xl">
+               <div className="w-full max-w-md bg-white/80 p-8 rounded-lg shadow-xl" role="alert">
                   <h2 className="text-2xl font-bold text-[#8C1007] mb-4">Oops! Something went wrong.</h2>
-                  <p className="text-[#3E0703] mb-6">{error}</p>
+                  <p className="text-[#3E0703] mb-6" aria-live="polite">{error}</p>
                    <button onClick={handleRestart} className="px-6 py-2 bg-[#3E0703] text-white rounded-lg">Try Again</button>
                </div>
            </div>
@@ -254,17 +271,17 @@ const App: React.FC = () => {
     const currentQuestion = questions[currentStep];
 
     return (
-      <div className="flex flex-col items-center justify-center p-4 h-full z-10">
+      <div className="flex flex-col items-center justify-center p-4 z-10">
         <div className="w-full max-w-2xl mx-auto">
           <div className="bg-[#8C1007]/20 rounded-full h-2.5 w-full mb-8">
-            <div className="bg-[#8C1007] h-2.5 rounded-full animate-progress" style={{ width: `${progress}%` }}></div>
+            <div className="bg-[#8C1007] h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
           </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 transition-all duration-500 relative">
+          <div className={`bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 transition-all duration-500 relative ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
              {currentStep > 0 && (
                <button 
                  onClick={handleBack} 
                  className="absolute top-4 left-4 text-[#3E0703] hover:text-[#8C1007] font-bold transition-all flex items-center text-lg p-2 rounded-lg hover:bg-[#8C1007]/10"
-                 aria-label="Go back"
+                 aria-label="Go back to previous question"
                >
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -277,11 +294,11 @@ const App: React.FC = () => {
               <div className="flex flex-wrap justify-center gap-3">
                 {currentQuestion.options.map((option) => (
                   <button
-                    key={option}
-                    onClick={() => handleOptionSelect(currentQuestion.key as keyof HangoutParams, option)}
-                    className="px-5 py-3 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 bg-[#8C1007] text-white border-[#8C1007] hover:bg-[#660B05]"
+                    key={option.value}
+                    onClick={() => handleOptionSelect(currentQuestion.key as keyof HangoutParams, option.value)}
+                    className="px-5 py-3 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#8C1007] text-white border-[#8C1007] hover:bg-[#660B05]"
                   >
-                    {option}
+                    {option.name}
                   </button>
                 ))}
               </div>
@@ -295,7 +312,7 @@ const App: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleSurpriseMe(currentQuestion.key as keyof HangoutParams, currentQuestion.options)}
-                    className="px-6 py-4 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 bg-[#660B05] text-white border-[#8C1007] shadow-lg animate-pulse-subtle"
+                    className="px-6 py-4 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#660B05] text-white border-[#8C1007] shadow-lg animate-pulse-subtle"
                   >
                     Just Surprise Me, Chale!
                   </button>
@@ -312,7 +329,6 @@ const App: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-[#FFFCF5] overflow-hidden">
-        <WhimsicalBackground />
         {showConfetti && <Confetti />}
         <button
             onClick={() => setIsHistoryPanelOpen(!isHistoryPanelOpen)}
@@ -322,8 +338,10 @@ const App: React.FC = () => {
             <HistoryIcon />
         </button>
 
-        <main className={`transition-all duration-500 ease-in-out w-full min-h-screen overflow-y-auto ${isHistoryPanelOpen ? 'pl-0 md:pl-80' : 'pl-0'}`}>
-            {mainContent()}
+        <main className={`transition-all duration-500 ease-in-out w-full min-h-screen ${isHistoryPanelOpen ? 'pl-0 md:pl-80' : 'pl-0'}`}>
+            <div className="min-h-screen flex flex-col justify-center">
+              {mainContent()}
+            </div>
         </main>
 
         <HistoryPanel

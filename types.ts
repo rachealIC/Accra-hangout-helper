@@ -5,7 +5,7 @@ export type Vibe =
   | 'Food & Nightlife'
   | 'Arts & Culture'
   | 'Active & Adventure'
-  | 'Shopping & Markets'
+  | 'Movies & Plays'
   | 'Romantic Date'
   | 'Picnic & Parks'
   | '';

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { HistoryItem } from '../types';
-import { UserIcon, AiIcon, CloseIcon } from './Icons';
+import { UserIcon, AiIcon, CloseIcon, MissionIcon } from './Icons';
 
 interface HistoryPanelProps {
   history: HistoryItem[];
@@ -28,7 +28,13 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, isOpen, onClose })
 
       <div className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-65px)]">
         {history.length === 0 ? (
-          <p className="text-[#660B05] text-center mt-8">Your planning history will appear here.</p>
+          <div className="text-center mt-12 text-[#660B05] opacity-70">
+            <div className="flex justify-center mb-4">
+                <MissionIcon />
+            </div>
+            <p className="font-semibold">No Vibe History Yet</p>
+            <p className="text-sm">Your planning journey will be recorded here once you start making choices.</p>
+          </div>
         ) : (
           history.map(item => (
             <div key={item.id} className="flex items-start gap-3 animate-slide-in">
@@ -37,7 +43,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, isOpen, onClose })
               </div>
               <div>
                 <p className="font-bold text-[#3E0703]">{item.label}</p>
-                <p className="text-[#660B05]">{item.content}</p>
+                <p className="text-[#660B05] break-words">{item.content}</p>
               </div>
             </div>
           ))

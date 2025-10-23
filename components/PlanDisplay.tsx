@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon } from './Icons';
+import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon, TimeIcon } from './Icons';
 
 // A simple parser to render the AI's structured text response with Zen styling.
 const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: boolean }) => {
@@ -17,6 +17,7 @@ const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: bo
         'Picnic Essentials': <PicnicIcon />,
         'Location': <LocationIcon />,
         'Essentials Checklist': <ChecklistIcon />,
+        'Opening Hours': <TimeIcon />,
     };
 
     for (const line of lines) {
