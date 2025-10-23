@@ -1,4 +1,4 @@
-import { Vibe, TimeWindow, Budget, Audience, Timing } from './types';
+import { Vibe, TimeWindow, Budget, Audience, Timing, DateMeal } from './types';
 
 export const VIBE_OPTIONS: Vibe[] = [
   'Relax & Unwind',
@@ -6,7 +6,8 @@ export const VIBE_OPTIONS: Vibe[] = [
   'Arts & Culture',
   'Active & Adventure',
   'Shopping & Markets',
-  "I'm Feeling Lucky!",
+  'Romantic Date',
+  'Picnic & Parks',
 ];
 
 export const TIME_WINDOW_OPTIONS: TimeWindow[] = [
@@ -16,10 +17,10 @@ export const TIME_WINDOW_OPTIONS: TimeWindow[] = [
   'A Whole Day Trip (8+ hours)',
 ];
 
-export const BUDGET_OPTIONS: { name: Budget, icon: string }[] = [
-    { name: 'Basically Free', icon: '💰' },
-    { name: 'Mid-Range', icon: '💰💰' },
-    { name: 'Feeling Fancy', icon: '💰💰💰' },
+export const BUDGET_OPTIONS: { name: Budget }[] = [
+    { name: 'Basically Free' },
+    { name: 'Mid-Range' },
+    { name: 'Feeling Fancy' },
 ];
 
 
@@ -30,3 +31,5 @@ export const TIMING_OPTIONS: Timing[] = [
   'Later Today',
   'Sometime This Week',
 ];
+
+export const DATE_MEAL_OPTIONS: DateMeal[] = ['Breakfast', 'Lunch', 'Dinner'];

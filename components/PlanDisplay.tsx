@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon } from './Icons';
+import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon } from './Icons';
 
 // A simple parser to render the AI's structured text response with Zen styling.
-const ZenParser = ({ content }: { content: string }) => {
+const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: boolean }) => {
     const lines = content.split('\n').filter(line => line.trim() !== '');
     const elements = [];
-    let currentKey = '';
-    let currentContent: string[] = [];
 
     const icons: { [key: string]: React.ReactNode } = {
         'Description': <MissionIcon />,
@@ -15,6 +14,9 @@ const ZenParser = ({ content }: { content: string }) => {
         'Travel Estimate': <TravelIcon />,
         'Rating': <VibeIcon />,
         'Recommendation': <TipIcon />,
+        'Picnic Essentials': <PicnicIcon />,
+        'Location': <LocationIcon />,
+        'Essentials Checklist': <ChecklistIcon />,
     };
 
     for (const line of lines) {
@@ -23,26 +25,49 @@ const ZenParser = ({ content }: { content: string }) => {
             const value = valueParts.join(':').trim();
             if (key.trim() === 'Title' || key.trim() === 'OPTION 1' || key.trim() === 'OPTION 2') {
                 // Skip adding title here, it's handled separately
+            } else if (key.trim() === 'Location' && isFinalPlan) {
+                 const mapQuery = encodeURIComponent(`${value}, Accra, Ghana`);
+                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+                 elements.push(
+                    <div key={key} className="flex items-start mt-4">
+                        <span className="text-[#8C1007] mr-3 mt-1">{icons[key.trim()]}</span>
+                        <div>
+                            <h3 className="font-semibold text-[#3E0703]">{key.trim()}</h3>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <p className="text-[#660B05] text-lg">{value}</p>
+                                <a
+                                    href={mapUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center text-sm font-bold text-[#8C1007] hover:text-[#660B05] bg-[#8C1007]/10 hover:bg-[#8C1007]/20 transition-colors px-3 py-1 rounded-full shadow-sm border border-[#8C1007]/20"
+                                >
+                                    <MapItIcon />
+                                    <span className="ml-1.5">Map It</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                 );
             } else {
                 elements.push(
                     <div key={key} className="flex items-start mt-4">
-                        <span className="text-stone-500 mr-3 mt-1">{icons[key.trim()]}</span>
+                        <span className="text-[#8C1007] mr-3 mt-1">{icons[key.trim()]}</span>
                         <div>
-                            <h3 className="font-semibold text-stone-700">{key.trim()}</h3>
-                            <p className="text-stone-600 text-lg">{value}</p>
+                            <h3 className="font-semibold text-[#3E0703]">{key.trim()}</h3>
+                            {value && <p className="text-[#660B05] text-lg">{value}</p>}
                         </div>
                     </div>
                 );
             }
         } else if (line.startsWith('- ')) {
              elements.push(
-                <li key={line} className="text-stone-600 text-lg ml-12 list-none relative">
-                    <span className="absolute -left-5 top-3 h-1 w-1 bg-stone-400 rounded-full"></span>
+                <li key={line} className="text-[#660B05] text-lg ml-12 list-none relative">
+                    <span className="absolute -left-5 top-3 h-1 w-1 bg-[#8C1007]/50 rounded-full"></span>
                     {line.substring(2)}
                 </li>
              );
         } else {
-             elements.push(<p key={line} className="text-stone-600 text-lg mt-2">{line}</p>);
+             elements.push(<p key={line} className="text-[#660B05] text-lg mt-2">{line}</p>);
         }
     }
 
@@ -55,10 +80,14 @@ interface PlanDisplayProps {
   onSelectPlan?: (planContent: string) => void;
   onFindCloser?: () => void;
   isLocationAvailable?: boolean;
+  isFinalPlan?: boolean;
 }
 
-const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isLocationAvailable }) => {
+const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isLocationAvailable, isFinalPlan }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const planContainerRef = useRef<HTMLDivElement>(null);
+
   let plans: string[];
   let recommendation: string | null = null;
 
@@ -72,9 +101,8 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
   // Then, split the remaining content into plans, filtering out any empty strings.
   plans = mainPlansContent.split('---').map(p => p.trim()).filter(Boolean);
 
-
   const handleShare = async () => {
-    if (isSharing) return; // Prevent multiple clicks
+    if (isSharing) return;
 
     if (navigator.share) {
       try {
@@ -98,22 +126,49 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
     }
   };
   
+  const handleDownload = async () => {
+    if (isDownloading) return;
+
+    const elementToCapture = planContainerRef.current;
+    if (!elementToCapture) return;
+
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(elementToCapture, {
+        backgroundColor: '#FFFCF5', // Match the page background for a seamless image
+        scale: 2, // Capture at a higher resolution
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'accra-vibe-plan.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to download plan:', error);
+      alert('Sorry, there was an error downloading your plan.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const getTitle = (planText: string) => {
     const titleLine = planText.split('\n').find(line => line.startsWith('Title:'));
     return titleLine ? titleLine.replace('Title:', '').trim() : 'Your Vibe Plan';
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f4f1ea] flex flex-col items-center p-4 sm:p-6 md:p-8">
-        <div className="w-full max-w-3xl space-y-8">
+    <div className="w-full flex flex-col items-center p-4 sm:p-6 md:p-8">
+        <div ref={planContainerRef} className="w-full max-w-3xl space-y-8">
             {plans.map((plan, index) => (
-                <div key={index} className="bg-white/70 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-sm border border-stone-200/80 animate-slide-in">
-                    <h2 className="text-3xl font-bold text-stone-800 mb-4">{getTitle(plan)}</h2>
-                    <ZenParser content={plan} />
+                <div key={index} className="bg-white/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 animate-slide-in">
+                    <h2 className="text-3xl font-bold text-[#3E0703] mb-4">{getTitle(plan)}</h2>
+                    <ZenParser content={plan} isFinalPlan={isFinalPlan} />
                     {onSelectPlan && (
                         <button
                             onClick={() => onSelectPlan(plan)}
-                            className="w-full mt-6 py-3 px-6 bg-stone-800 text-white font-bold rounded-lg shadow-md hover:bg-stone-900 transition-all duration-300 transform hover:scale-105"
+                            className="w-full mt-6 py-3 px-6 bg-[#8C1007] text-white font-bold rounded-lg shadow-md hover:bg-[#660B05] transition-all duration-300 transform hover:scale-105"
                         >
                             Choose this Vibe
                         </button>
@@ -122,12 +177,12 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
             ))}
 
             {onSelectPlan && isLocationAvailable && onFindCloser && (
-                <div className="bg-stone-50/70 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-sm border border-stone-200/80 animate-slide-in text-center">
-                    <h3 className="text-xl font-bold text-stone-700 mb-2">Not quite right?</h3>
-                    <p className="text-stone-600 mb-4 text-lg">Let's find something a little closer to you.</p>
+                <div className="bg-[#8C1007]/5 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-[#8C1007]/10 animate-slide-in text-center">
+                    <h3 className="text-xl font-bold text-[#3E0703] mb-2">Not quite right?</h3>
+                    <p className="text-[#660B05] mb-4 text-lg">Let's find something a little closer to you.</p>
                     <button
                         onClick={onFindCloser}
-                        className="py-3 px-6 bg-stone-800 text-white font-bold rounded-lg shadow-md hover:bg-stone-900 transition-all duration-300 transform hover:scale-105"
+                        className="py-3 px-6 bg-[#8C1007] text-white font-bold rounded-lg shadow-md hover:bg-[#660B05] transition-all duration-300 transform hover:scale-105"
                     >
                         Find Closer Vibes
                     </button>
@@ -135,24 +190,34 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
             )}
 
             {recommendation && (
-                 <div className="bg-white/70 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-sm border border-stone-200/80 animate-slide-in">
+                 <div className="bg-white/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 animate-slide-in">
                     <ZenParser content={recommendation} />
                  </div>
             )}
         </div>
 
-      <div className="mt-8 flex justify-center items-center w-full max-w-3xl">
+      <div className="mt-8 flex justify-center items-center w-full max-w-3xl gap-4">
+        {!onSelectPlan && (
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center px-4 py-2 bg-white/60 text-[#3E0703] rounded-lg hover:bg-white transition-all shadow-md border border-white/50 disabled:opacity-50"
+            >
+              <DownloadIcon />
+              <span className="ml-2">{isDownloading ? 'Saving...' : 'Download'}</span>
+            </button>
+        )}
         <button
           onClick={handleShare}
           disabled={isSharing}
-          className="flex items-center px-4 py-2 bg-white/80 text-stone-700 rounded-lg hover:bg-white transition-all shadow-sm border border-stone-200/80 disabled:opacity-50"
+          className="flex items-center px-4 py-2 bg-white/60 text-[#3E0703] rounded-lg hover:bg-white transition-all shadow-md border border-white/50 disabled:opacity-50"
         >
           <ShareIcon />
           <span className="ml-2">{isSharing ? 'Sharing...' : 'Share'}</span>
         </button>
         <button
           onClick={onRestart}
-          className="flex items-center px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-colors ml-4"
+          className="flex items-center px-4 py-2 bg-[#8C1007] text-white rounded-lg hover:bg-[#660B05] transition-colors shadow-md"
         >
           <RestartIcon />
           <span className="ml-2">Start Over</span>

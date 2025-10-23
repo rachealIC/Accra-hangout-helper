@@ -6,7 +6,8 @@ export type Vibe =
   | 'Arts & Culture'
   | 'Active & Adventure'
   | 'Shopping & Markets'
-  | "I'm Feeling Lucky!"
+  | 'Romantic Date'
+  | 'Picnic & Parks'
   | '';
 
 export type TimeWindow =
@@ -18,9 +19,11 @@ export type TimeWindow =
 
 export type Budget = 'Basically Free' | 'Mid-Range' | 'Feeling Fancy' | '';
 
-export type Audience = 'Solo Mission' | 'With the Crew' | '';
+export type Audience = 'Solo Mission' | 'With the Crew' | 'Just the Two of Us' | "It's a Double Date" | '';
 
 export type Timing = 'Right Now!' | 'Later Today' | 'Sometime This Week' | '';
+
+export type DateMeal = 'Breakfast' | 'Lunch' | 'Dinner' | '';
 
 export type Location = {
   latitude: number;
@@ -35,4 +38,12 @@ export interface HangoutParams {
   timing: Timing;
   location: Location;
   proximity?: 'close' | 'any';
+  dateMeal?: DateMeal;
+}
+
+export interface HistoryItem {
+  id: string;
+  type: 'user' | 'ai';
+  label: string;
+  content: string;
 }

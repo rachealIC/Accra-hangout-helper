@@ -11,6 +11,7 @@
     <style>
       body {
         font-family: 'Dosis', sans-serif;
+        background-color: #FFFCF5;
       }
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Fredoka', sans-serif;
@@ -36,17 +37,6 @@
             transform: translateY(0);
         }
       }
-      .animate-fade-in-out {
-        animation: fade-in-out 2.5s ease-in-out infinite;
-      }
-      @keyframes fade-in-out {
-        0%, 100% {
-          opacity: 0.2;
-        }
-        50% {
-          opacity: 1;
-        }
-      }
       @keyframes drift {
         0% {
           transform: translateY(0px) translateX(0px);
@@ -68,6 +58,69 @@
           transform: scale(1);
         }
       }
+      @keyframes drive-across {
+        from {
+          transform: translateX(-160px); /* Start just off-screen left */
+        }
+        to {
+          transform: translateX(100vw); /* End just off-screen right */
+        }
+      }
+      @keyframes trotro-bounce {
+        0%, 100% { transform: translateY(0) rotate(0.2deg); }
+        20% { transform: translateY(-5px) rotate(-0.8deg); }
+        45% { transform: translateY(1px) rotate(0.5deg); }
+        75% { transform: translateY(-2px) rotate(-0.4deg); }
+      }
+      @keyframes car-wiggle {
+        0%, 100% { transform: translateY(0) rotate(0); }
+        50% { transform: translateY(-2px) rotate(0.5deg); }
+      }
+      @keyframes okada-rush {
+        0%, 100% { transform: translateY(0) rotate(-2deg); }
+        50% { transform: translateY(-3px) rotate(2deg); }
+      }
+      @keyframes walk-cycle {
+         0%, 100% { transform: translateY(0); }
+         50% { transform: translateY(-4px); }
+      }
+      .animate-pulse-subtle {
+        animation: pulse-subtle 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+      }
+      @keyframes pulse-subtle {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.03);
+        }
+      }
+      @keyframes sway {
+        0%, 100% {
+            transform: rotate(-3deg);
+        }
+        50% {
+            transform: rotate(3deg);
+        }
+      }
+      @keyframes sun-rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+      }
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-10vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(110vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
     </style>
   <script type="importmap">
 {
@@ -75,12 +128,13 @@
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1"
   }
 }
 </script>
 </head>
-  <body class="bg-yellow-50">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
