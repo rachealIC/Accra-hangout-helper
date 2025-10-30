@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon, TimeIcon } from './Icons';
+import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon, TimeIcon, CalendarIcon } from './Icons';
 
 // A simple parser to render the AI's structured text response with Zen styling.
 const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: boolean }) => {
@@ -31,16 +31,16 @@ const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: bo
                  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
                  elements.push(
                     <div key={key} className="flex items-start mt-4">
-                        <span className="text-[#8C1007] mr-3 mt-1">{icons[key.trim()]}</span>
+                        <span className="text-[#8C1007] dark:text-[#E18C44] mr-3 mt-1 icon-fill-capture">{icons[key.trim()]}</span>
                         <div>
-                            <h3 className="font-semibold text-[#3E0703]">{key.trim()}</h3>
+                            <h3 className="font-semibold text-[#3E0703] dark:text-slate-200">{key.trim()}</h3>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                <p className="text-[#660B05] text-lg">{value}</p>
+                                <p className="text-[#660B05] dark:text-slate-300 text-lg">{value}</p>
                                 <a
                                     href={mapUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center text-sm font-bold text-[#8C1007] hover:text-[#660B05] bg-[#8C1007]/10 hover:bg-[#8C1007]/20 transition-colors px-3 py-1 rounded-full shadow-sm border border-[#8C1007]/20"
+                                    className="flex items-center text-sm font-bold text-[#8C1007] dark:text-[#E18C44] hover:text-[#660B05] dark:hover:text-[#ffc58a] bg-[#8C1007]/10 dark:bg-[#E18C44]/10 hover:bg-[#8C1007]/20 dark:hover:bg-[#E18C44]/20 transition-colors px-3 py-1 rounded-full shadow-sm border border-[#8C1007]/20 dark:border-[#E18C44]/20"
                                 >
                                     <MapItIcon />
                                     <span className="ml-1.5">Map It</span>
@@ -52,23 +52,23 @@ const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: bo
             } else {
                 elements.push(
                     <div key={key} className="flex items-start mt-4">
-                        <span className="text-[#8C1007] mr-3 mt-1">{icons[key.trim()]}</span>
+                        <span className="text-[#8C1007] dark:text-[#E18C44] mr-3 mt-1 icon-fill-capture">{icons[key.trim()]}</span>
                         <div>
-                            <h3 className="font-semibold text-[#3E0703]">{key.trim()}</h3>
-                            {value && <p className="text-[#660B05] text-lg">{value}</p>}
+                            <h3 className="font-semibold text-[#3E0703] dark:text-slate-200">{key.trim()}</h3>
+                            {value && <p className="text-[#660B05] dark:text-slate-300 text-lg">{value}</p>}
                         </div>
                     </div>
                 );
             }
         } else if (line.startsWith('- ')) {
              elements.push(
-                <li key={line} className="text-[#660B05] text-lg ml-12 list-none relative">
-                    <span className="absolute -left-5 top-3 h-1 w-1 bg-[#8C1007]/50 rounded-full"></span>
+                <li key={line} className="text-[#660B05] dark:text-slate-300 text-lg ml-12 list-none relative">
+                    <span className="absolute -left-5 top-3 h-1 w-1 bg-[#8C1007]/50 dark:bg-[#E18C44]/50 rounded-full"></span>
                     {line.substring(2)}
                 </li>
              );
         } else {
-             elements.push(<p key={line} className="text-[#660B05] text-lg mt-2">{line}</p>);
+             elements.push(<p key={line} className="text-[#660B05] dark:text-slate-300 text-lg mt-2">{line}</p>);
         }
     }
 
@@ -80,11 +80,10 @@ interface PlanDisplayProps {
   onRestart: () => void;
   onSelectPlan?: (planContent: string) => void;
   onFindCloser?: () => void;
-  isLocationAvailable?: boolean;
   isFinalPlan?: boolean;
 }
 
-const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isLocationAvailable, isFinalPlan }) => {
+const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isFinalPlan }) => {
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const planContainerRef = useRef<HTMLDivElement>(null);
@@ -134,10 +133,15 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
     if (!elementToCapture) return;
 
     setIsDownloading(true);
+    elementToCapture.classList.add('capturing'); // Add class for screenshot styles
+
     try {
+      // Small delay to allow styles to apply
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const canvas = await html2canvas(elementToCapture, {
-        backgroundColor: '#FFFCF5', // Match the page background for a seamless image
-        scale: 2, // Capture at a higher resolution
+        backgroundColor: null, // We're using the element's bg, which is set in CSS
+        scale: 3, // Increased scale for higher resolution
       });
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
@@ -150,9 +154,46 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
       console.error('Failed to download plan:', error);
       alert('Sorry, there was an error downloading your plan.');
     } finally {
+      elementToCapture.classList.remove('capturing'); // Clean up class
       setIsDownloading(false);
     }
   };
+
+  const handleAddToCalendar = () => {
+    const mainPlanContent = plans[0];
+    if (!mainPlanContent) return;
+
+    const getDetail = (key: string, content: string): string => {
+        const line = content.split('\n').find(l => l.trim().startsWith(key + ':'));
+        return line ? line.replace(key + ':', '').trim() : '';
+    };
+
+    const title = `Vibe Plan: ${getDetail('Title', mainPlanContent)}`;
+    const location = getDetail('Location', mainPlanContent);
+    
+    const descriptionLines = [
+        getDetail('Description', mainPlanContent),
+        `\nCost: ${getDetail('Cost', mainPlanContent)}`,
+        `Rating: ${getDetail('Rating', mainPlanContent)}`,
+        `Pro-Tip: ${getDetail('Pro-Tip', mainPlanContent)}`,
+        `Opening Hours: ${getDetail('Opening Hours', mainPlanContent)}`,
+        `\nGenerated by Accra Vibe Planner`
+    ];
+    const description = descriptionLines.filter(Boolean).join('\n');
+
+    if (!title) {
+        alert("Couldn't find a title to create a calendar event.");
+        return;
+    }
+
+    const encodedTitle = encodeURIComponent(title);
+    const encodedLocation = encodeURIComponent(location);
+    const encodedDescription = encodeURIComponent(description);
+
+    const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodedTitle}&location=${encodedLocation}&details=${encodedDescription}`;
+
+    window.open(googleCalendarUrl, '_blank', 'noopener,noreferrer');
+};
 
   const getTitle = (planText: string) => {
     const titleLine = planText.split('\n').find(line => line.startsWith('Title:'));
@@ -163,13 +204,13 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
     <div className="w-full flex flex-col items-center p-4 sm:p-6 md:p-8">
         <div ref={planContainerRef} className="w-full max-w-3xl space-y-8">
             {plans.map((plan, index) => (
-                <div key={index} className="bg-white/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 animate-slide-in">
-                    <h2 className="text-3xl font-bold text-[#3E0703] mb-4">{getTitle(plan)}</h2>
+                <div key={index} className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 animate-slide-in">
+                    <h2 className="text-3xl font-bold text-[#3E0703] dark:text-slate-100 mb-4">{getTitle(plan)}</h2>
                     <ZenParser content={plan} isFinalPlan={isFinalPlan} />
                     {onSelectPlan && (
                         <button
                             onClick={() => onSelectPlan(plan)}
-                            className="w-full mt-6 py-3 px-6 bg-[#8C1007] text-white font-bold rounded-lg shadow-md hover:bg-[#660B05] transition-all duration-300 transform hover:scale-105"
+                            className="w-full mt-6 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] transition-all duration-300 transform hover:scale-105"
                         >
                             Choose this Vibe
                         </button>
@@ -177,13 +218,13 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
                 </div>
             ))}
 
-            {onSelectPlan && isLocationAvailable && onFindCloser && (
-                <div className="bg-[#8C1007]/5 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-[#8C1007]/10 animate-slide-in text-center">
-                    <h3 className="text-xl font-bold text-[#3E0703] mb-2">Not quite right?</h3>
-                    <p className="text-[#660B05] mb-4 text-lg">Let's find something a little closer to you.</p>
+            {onSelectPlan && onFindCloser && (
+                <div className="bg-[#8C1007]/5 dark:bg-[#E18C44]/5 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-[#8C1007]/10 dark:border-[#E18C44]/10 animate-slide-in text-center">
+                    <h3 className="text-xl font-bold text-[#3E0703] dark:text-slate-100 mb-2">Not quite right?</h3>
+                    <p className="text-[#660B05] dark:text-slate-300 mb-4 text-lg">Let's find something a little closer to you.</p>
                     <button
                         onClick={onFindCloser}
-                        className="py-3 px-6 bg-[#8C1007] text-white font-bold rounded-lg shadow-md hover:bg-[#660B05] transition-all duration-300 transform hover:scale-105"
+                        className="py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] transition-all duration-300 transform hover:scale-105"
                     >
                         Find Closer Vibes
                     </button>
@@ -191,34 +232,43 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
             )}
 
             {recommendation && (
-                 <div className="bg-white/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 animate-slide-in">
+                 <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 animate-slide-in">
                     <ZenParser content={recommendation} />
                  </div>
             )}
         </div>
 
-      <div className="mt-8 flex justify-center items-center w-full max-w-3xl gap-4">
+      <div className="mt-8 flex justify-center items-center flex-wrap w-full max-w-3xl gap-4">
         {!onSelectPlan && (
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="flex items-center px-4 py-2 bg-white/60 text-[#3E0703] rounded-lg hover:bg-white transition-all shadow-md border border-white/50 disabled:opacity-50"
-            >
-              <DownloadIcon />
-              <span className="ml-2">{isDownloading ? 'Saving...' : 'Download'}</span>
-            </button>
+            <>
+                <button
+                  onClick={handleAddToCalendar}
+                  className="flex items-center px-4 py-2 bg-white/60 dark:bg-slate-800/60 text-[#3E0703] dark:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md border border-white/50 dark:border-slate-700/50"
+                >
+                  <CalendarIcon />
+                  <span className="ml-2">Add to Calendar</span>
+                </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="flex items-center px-4 py-2 bg-white/60 dark:bg-slate-800/60 text-[#3E0703] dark:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md border border-white/50 dark:border-slate-700/50 disabled:opacity-50"
+                >
+                  <DownloadIcon />
+                  <span className="ml-2">{isDownloading ? 'Saving...' : 'Download'}</span>
+                </button>
+            </>
         )}
         <button
           onClick={handleShare}
           disabled={isSharing}
-          className="flex items-center px-4 py-2 bg-white/60 text-[#3E0703] rounded-lg hover:bg-white transition-all shadow-md border border-white/50 disabled:opacity-50"
+          className="flex items-center px-4 py-2 bg-white/60 dark:bg-slate-800/60 text-[#3E0703] dark:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md border border-white/50 dark:border-slate-700/50 disabled:opacity-50"
         >
           <ShareIcon />
           <span className="ml-2">{isSharing ? 'Sharing...' : 'Share'}</span>
         </button>
         <button
           onClick={onRestart}
-          className="flex items-center px-4 py-2 bg-[#8C1007] text-white rounded-lg hover:bg-[#660B05] transition-colors shadow-md"
+          className="flex items-center px-4 py-2 bg-[#8C1007] dark:bg-slate-600 text-white dark:text-slate-100 rounded-lg hover:bg-[#660B05] dark:hover:bg-slate-500 transition-colors shadow-md"
         >
           <RestartIcon />
           <span className="ml-2">Start Over</span>

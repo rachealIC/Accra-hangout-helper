@@ -8,22 +8,19 @@ import {
   TIMING_OPTIONS,
   DATE_MEAL_OPTIONS,
 } from './constants';
-import type { HangoutParams, HistoryItem } from './types';
+import type { HangoutParams, SavedPlan } from './types';
 import { generatePlanOptions, getTravelDetails } from './services/geminiService';
 import PlanDisplay from './components/PlanDisplay';
 import DynamicLoading from './components/DynamicLoading';
 import HistoryPanel from './components/HistoryPanel';
 import Confetti from './components/Confetti';
-import { HistoryIcon } from './components/Icons';
+import { HistoryIcon, SunIcon, MoonIcon } from './components/Icons';
 import LandingTrotro from './components/LandingTrotro';
 
 type AppState = 'WELCOME' | 'GATHERING_INPUT' | 'LOADING' | 'SHOWING_OPTIONS' | 'ASKING_LOCATION' | 'SHOWING_FINAL_PLAN' | 'ERROR';
 
-// Helper to get the title from a plan string
-const getTitleFromPlan = (planText: string) => {
-    const titleLine = planText.split('\n').find(line => line.startsWith('Title:'));
-    return titleLine ? titleLine.replace('Title:', '').trim() : 'a Vibe Plan';
-};
+const LOCAL_STORAGE_KEY = 'accra-vibe-plan-history';
+const THEME_KEY = 'accra-vibe-theme';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('WELCOME');
@@ -36,35 +33,81 @@ const App: React.FC = () => {
   const [userOrigin, setUserOrigin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [planHistory, setPlanHistory] = useState<SavedPlan[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
 
-  const addToHistory = (item: Omit<HistoryItem, 'id'>) => {
-    setHistory(prev => [...prev, { ...item, id: new Date().toISOString() + Math.random() }]);
+  useEffect(() => {
+    // Theme initialization
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    // History initialization
+    try {
+      const storedHistory = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedHistory) {
+        setPlanHistory(JSON.parse(storedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to load plan history from localStorage", error);
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prevMode => {
+      const newMode = !prevMode;
+      if (newMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+      return newMode;
+    });
   };
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setParams((prev) => ({
-          ...prev,
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          },
-        }));
-        setLocationError(null);
-      },
-      (err) => {
-        console.error("Error getting location: ", err);
-        setLocationError("Enable location for better, closer suggestions!");
-      }
-    );
-  }, []);
+  const savePlanToHistory = (planContent: string) => {
+    const newPlan: SavedPlan = {
+        id: new Date().toISOString(),
+        planContent,
+        savedAt: new Date().toISOString(),
+        rating: null,
+    };
+    setPlanHistory(prevHistory => {
+        const updatedHistory = [newPlan, ...prevHistory];
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
+        } catch (error) {
+            console.error("Failed to save plan history to localStorage", error);
+        }
+        return updatedHistory;
+    });
+  };
+
+  const handleRatePlan = (id: string, rating: number) => {
+      setPlanHistory(prevHistory => {
+          const updatedHistory = prevHistory.map(plan =>
+              plan.id === id ? { ...plan, rating } : plan
+          );
+          try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedHistory));
+          } catch (error) {
+              console.error("Failed to update plan rating in localStorage", error);
+          }
+          return updatedHistory;
+      });
+  };
 
   const questions = useMemo(() => {
       const audienceQuestion = params.vibe === 'Romantic Date'
@@ -81,25 +124,11 @@ const App: React.FC = () => {
       ];
   }, [params.vibe]);
   
-  const getStepLabel = (key: string): string => {
-      switch(key) {
-        case 'vibe': return 'Vibe';
-        case 'dateMeal': return 'Date Meal';
-        case 'timeWindow': return 'Time';
-        case 'budget': return 'Budget';
-        case 'audience': return 'Group';
-        case 'timing': return 'Timing';
-        default: return 'Choice';
-      }
-  };
-
   const handleOptionSelect = (key: keyof HangoutParams, value: any) => {
     setIsTransitioning(true);
     setTimeout(() => {
         const newParams = { ...params, [key]: value };
         setParams(newParams);
-        const selectedOption = questions[currentStep].options.find(o => o.value === value);
-        addToHistory({ type: 'user', label: `Selected ${getStepLabel(key)}`, content: selectedOption?.name || value });
 
         const isLastQuestion = currentStep >= questions.length - 1;
 
@@ -138,7 +167,6 @@ const App: React.FC = () => {
     try {
       const result = await generatePlanOptions(finalParams);
       setPlanOptions(result);
-      addToHistory({ type: 'ai', label: 'Generated Vibes', content: 'Here are a couple of options for you.' });
       setAppState('SHOWING_OPTIONS');
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.');
@@ -147,25 +175,50 @@ const App: React.FC = () => {
   };
   
   const handleFindCloser = () => {
-      const closerParams = { ...params, proximity: 'close' as const };
-      addToHistory({ type: 'user', label: 'New Request', content: 'Find something closer to me.' });
-      handleSubmit(closerParams);
+      if (!navigator.geolocation) {
+          setError("Geolocation is not supported by your browser.");
+          setAppState('ERROR');
+          return;
+      }
+
+      setAppState('LOADING');
+      
+      navigator.geolocation.getCurrentPosition(
+          (position) => {
+              const newLocation = {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+              };
+              const closerParams = { 
+                  ...params, 
+                  location: newLocation, 
+                  proximity: 'close' as const 
+              };
+              setParams(closerParams); // Update main params state
+              handleSubmit(closerParams);
+          },
+          (err) => {
+              console.error("Error getting location: ", err);
+              setError("Couldn't get your location. Please allow location access and try again.");
+              setAppState('ERROR');
+          }
+      );
   };
 
   const handlePlanSelect = (plan: string) => {
     setSelectedPlan(plan);
-    addToHistory({ type: 'user', label: 'Chose Vibe', content: getTitleFromPlan(plan) });
     setAppState('ASKING_LOCATION');
   };
 
   const handleLocationSubmit = async () => {
-      if (!userOrigin.trim() || !selectedPlan) return;
+      const trimmedOrigin = userOrigin.trim();
+      if (!trimmedOrigin || !selectedPlan) return;
       setAppState('LOADING');
-      addToHistory({ type: 'user', label: 'Starting From', content: userOrigin });
       try {
-          const travelInfo = await getTravelDetails(userOrigin, selectedPlan);
-          setFinalPlan(`${selectedPlan}\n\n---\n${travelInfo}`);
-          addToHistory({ type: 'ai', label: 'Final Plan Ready', content: 'Calculated travel time and traffic.' });
+          const travelInfo = await getTravelDetails(trimmedOrigin, selectedPlan);
+          const fullPlan = `${selectedPlan}\n\n---\n${travelInfo}`;
+          setFinalPlan(fullPlan);
+          savePlanToHistory(fullPlan);
           setAppState('SHOWING_FINAL_PLAN');
           setShowConfetti(true);
           setTimeout(() => setShowConfetti(false), 4000); // Confetti lasts 4 seconds
@@ -176,14 +229,14 @@ const App: React.FC = () => {
   };
 
   const handleRestart = () => {
-    setParams({ ...params, vibe: '', timeWindow: '', budget: '', audience: '', timing: '', proximity: 'any', dateMeal: '' });
+    setParams({ ...params, vibe: '', timeWindow: '', budget: '', audience: '', timing: '', proximity: 'any', dateMeal: '', location: null });
     setCurrentStep(0);
     setPlanOptions(null);
     setFinalPlan(null);
     setSelectedPlan(null);
     setUserOrigin('');
     setError(null);
-    setHistory([]);
+    setLocationError(null);
     setAppState('WELCOME');
   };
 
@@ -197,15 +250,15 @@ const App: React.FC = () => {
                     <LandingTrotro />
                 </div>
                 <div className="max-w-4xl mx-auto">
-                    <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-[#3E0703] mb-4">
+                    <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-[#3E0703] dark:text-slate-100 mb-4">
                         Accra Vibe Planner
                     </h1>
-                    <p className="text-[#660B05] text-xl mb-8 max-w-lg mx-auto">
-                        Finally, a planner that gets Accra traffic, your introverted soul, and your group's indecision. Let's find the perfect spot.
+                    <p className="text-[#660B05] dark:text-slate-300 text-xl mb-8 max-w-lg mx-auto">
+                        Don't search for a spot, Chale. We already mapped the vibe and the bailout plan.
                     </p>
                     <button
                         onClick={() => setAppState('GATHERING_INPUT')}
-                        className="px-8 py-4 rounded-lg text-xl font-bold transition-all duration-300 transform hover:scale-105 bg-[#8C1007] text-white border-[#8C1007] shadow-lg animate-pulse-subtle"
+                        className="px-8 py-4 rounded-lg text-xl font-bold transition-all duration-300 transform hover:scale-105 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 border-[#8C1007] dark:border-[#E18C44] shadow-lg animate-pulse-subtle"
                     >
                         Let's Go!
                     </button>
@@ -226,26 +279,25 @@ const App: React.FC = () => {
           onRestart={handleRestart} 
           onSelectPlan={handlePlanSelect}
           onFindCloser={handleFindCloser}
-          isLocationAvailable={!!params.location}
       />;
     }
     if (appState === 'ASKING_LOCATION') {
        return (
           <div className="flex flex-col justify-center items-center p-4 h-full z-10">
-               <div className="w-full max-w-md bg-white/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 text-center animate-slide-in">
-                   <h2 className="text-2xl font-bold text-[#3E0703] mb-4">One last thing...</h2>
-                   <p className="text-[#660B05] mb-6 text-lg">To calculate the travel time and traffic, where will you be starting from?</p>
+               <div className="w-full max-w-md bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 text-center animate-slide-in">
+                   <h2 className="text-2xl font-bold text-[#3E0703] dark:text-slate-100 mb-4">One last thing...</h2>
+                   <p className="text-[#660B05] dark:text-slate-300 mb-6 text-lg">To calculate the travel time and traffic, where will you be starting from?</p>
                    <input
                       type="text"
                       value={userOrigin}
                       onChange={(e) => setUserOrigin(e.target.value)}
                       placeholder="e.g., Accra Mall or East Legon"
-                      className="w-full px-4 py-3 border-2 border-[#8C1007]/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-[#8C1007] outline-none transition"
+                      className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
                    />
                    <button
                       onClick={handleLocationSubmit}
                       disabled={!userOrigin.trim()}
-                      className="w-full mt-4 py-3 px-6 bg-[#8C1007] text-white font-bold rounded-lg shadow-md hover:bg-[#660B05] disabled:bg-[#8C1007]/50 transition-all"
+                      className="w-full mt-4 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] disabled:bg-[#8C1007]/50 dark:disabled:bg-[#E18C44]/50 transition-all"
                    >
                       Get Travel Details
                    </button>
@@ -259,10 +311,10 @@ const App: React.FC = () => {
     if (appState === 'ERROR') {
         return (
            <div className="flex flex-col justify-center items-center text-center p-4 h-full z-10">
-               <div className="w-full max-w-md bg-white/80 p-8 rounded-lg shadow-xl" role="alert">
-                  <h2 className="text-2xl font-bold text-[#8C1007] mb-4">Oops! Something went wrong.</h2>
-                  <p className="text-[#3E0703] mb-6" aria-live="polite">{error}</p>
-                   <button onClick={handleRestart} className="px-6 py-2 bg-[#3E0703] text-white rounded-lg">Try Again</button>
+               <div className="w-full max-w-md bg-white/80 dark:bg-red-900/40 backdrop-blur-sm p-8 rounded-lg shadow-xl border border-red-200/50" role="alert">
+                  <h2 className="text-2xl font-bold text-[#8C1007] dark:text-red-300 mb-4">Oops! Something went wrong.</h2>
+                  <p className="text-[#3E0703] dark:text-red-200 mb-6" aria-live="polite">{error}</p>
+                   <button onClick={handleRestart} className="px-6 py-2 bg-[#3E0703] dark:bg-red-800 text-white rounded-lg">Try Again</button>
                </div>
            </div>
         )
@@ -273,53 +325,61 @@ const App: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center p-4 z-10">
         <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-[#8C1007]/20 rounded-full h-2.5 w-full mb-8">
-            <div className="bg-[#8C1007] h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+          <div className="bg-[#8C1007]/20 dark:bg-slate-700 rounded-full h-2.5 w-full mb-8">
+            <div className="bg-[#8C1007] dark:bg-[#E18C44] h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
           </div>
-          <div className={`bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 transition-all duration-500 relative ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 pt-16 sm:p-8 sm:pt-12 transition-all duration-500 relative ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
              {currentStep > 0 && (
                <button 
                  onClick={handleBack} 
-                 className="absolute top-4 left-4 text-[#3E0703] hover:text-[#8C1007] font-bold transition-all flex items-center text-lg p-2 rounded-lg hover:bg-[#8C1007]/10"
+                 className="absolute top-2 left-3 sm:top-3 sm:left-4 text-[#3E0703] dark:text-slate-200 hover:text-[#8C1007] dark:hover:text-white font-bold transition-all flex items-center text-lg py-3 px-4 sm:py-4 rounded-lg hover:bg-[#8C1007]/10 dark:hover:bg-[#E18C44]/20"
                  aria-label="Go back to previous question"
                >
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                  </svg>
                  Back
                </button>
              )}
             <div className="text-center animate-slide-in" key={currentStep}>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#3E0703] mb-6">{currentQuestion.prompt}</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#3E0703] dark:text-slate-100 mb-6 sm:mt-4">{currentQuestion.prompt}</h2>
               <div className="flex flex-wrap justify-center gap-3">
                 {currentQuestion.options.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleOptionSelect(currentQuestion.key as keyof HangoutParams, option.value)}
-                    className="px-5 py-3 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#8C1007] text-white border-[#8C1007] hover:bg-[#660B05]"
-                  >
-                    {option.name}
-                  </button>
+                  <div key={option.value} className="flex flex-col items-center">
+                    <button
+                      onClick={() => handleOptionSelect(currentQuestion.key as keyof HangoutParams, option.value)}
+                      className="px-5 py-3 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 border-[#8C1007] dark:border-[#E18C44] hover:bg-[#660B05] dark:hover:bg-[#f3a469]"
+                    >
+                      {option.name}
+                    </button>
+                    {currentQuestion.key === 'budget' && (
+                        <span className="text-xs text-[#660B05] dark:text-slate-400 mt-1.5 px-2 text-center w-40 h-8">
+                            {option.name === 'Basically Free' ? '(Street food, parks, etc.)' :
+                             option.name === 'Mid-Range' ? '(Approx. GH₵80 - GH₵200 pp)' :
+                             option.name === 'Feeling Fancy' ? '(Approx. GH₵250+ pp)' : ''}
+                        </span>
+                    )}
+                  </div>
                 ))}
               </div>
 
               {(currentQuestion.key === 'vibe' || currentQuestion.key === 'timeWindow') && (
                 <>
                   <div className="my-6 flex items-center">
-                    <div className="flex-grow border-t border-[#8C1007]/30"></div>
-                    <span className="flex-shrink mx-4 text-[#660B05] font-semibold">or</span>
-                    <div className="flex-grow border-t border-[#8C1007]/30"></div>
+                    <div className="flex-grow border-t border-[#8C1007]/30 dark:border-slate-600"></div>
+                    <span className="flex-shrink mx-4 text-[#660B05] dark:text-slate-400 font-semibold">or</span>
+                    <div className="flex-grow border-t border-[#8C1007]/30 dark:border-slate-600"></div>
                   </div>
                   <button
                     onClick={() => handleSurpriseMe(currentQuestion.key as keyof HangoutParams, currentQuestion.options)}
-                    className="px-6 py-4 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#660B05] text-white border-[#8C1007] shadow-lg animate-pulse-subtle"
+                    className="px-6 py-4 rounded-lg border-2 text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-100 bg-[#660B05] dark:bg-[#e18b44] text-white dark:text-slate-900 border-[#8C1007] dark:border-[#E18C44] shadow-lg animate-pulse-subtle"
                   >
                     Just Surprise Me, Chale!
                   </button>
                 </>
               )}
 
-              {locationError && currentStep === 0 && <p className="text-[#8C1007] text-sm mt-6">{locationError}</p>}
+              {locationError && <p className="text-[#8C1007] text-sm mt-6">{locationError}</p>}
             </div>
           </div>
         </div>
@@ -328,15 +388,24 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#FFFCF5] overflow-hidden">
+    <div className="relative min-h-screen bg-[#FFFCF5] dark:bg-slate-900 overflow-hidden">
         {showConfetti && <Confetti />}
-        <button
-            onClick={() => setIsHistoryPanelOpen(!isHistoryPanelOpen)}
-            className="fixed top-4 left-4 z-30 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
-            aria-label="Toggle history panel"
-        >
-            <HistoryIcon />
-        </button>
+        <div className="fixed top-4 right-4 z-30 flex items-center gap-2">
+            <button
+                onClick={toggleDarkMode}
+                className="p-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-slate-700 transition-all text-[#3E0703] dark:text-slate-200"
+                aria-label="Toggle dark mode"
+            >
+                {isDarkMode ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <button
+                onClick={() => setIsHistoryPanelOpen(!isHistoryPanelOpen)}
+                className="p-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-slate-700 transition-all text-[#3E0703] dark:text-slate-200"
+                aria-label="Toggle history panel"
+            >
+                <HistoryIcon />
+            </button>
+        </div>
 
         <main className={`transition-all duration-500 ease-in-out w-full min-h-screen ${isHistoryPanelOpen ? 'pl-0 md:pl-80' : 'pl-0'}`}>
             <div className="min-h-screen flex flex-col justify-center">
@@ -345,9 +414,10 @@ const App: React.FC = () => {
         </main>
 
         <HistoryPanel
-            history={history}
+            history={planHistory}
             isOpen={isHistoryPanelOpen}
             onClose={() => setIsHistoryPanelOpen(false)}
+            onRatePlan={handleRatePlan}
         />
     </div>
   );

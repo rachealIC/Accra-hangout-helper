@@ -41,9 +41,9 @@ export interface HangoutParams {
   dateMeal?: DateMeal;
 }
 
-export interface HistoryItem {
+export interface SavedPlan {
   id: string;
-  type: 'user' | 'ai';
-  label: string;
-  content: string;
+  planContent: string;
+  savedAt: string;
+  rating: number | null;
 }

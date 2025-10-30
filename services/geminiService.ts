@@ -7,14 +7,14 @@ if (!apiKey) {
 }
 const ai = new GoogleGenAI({ apiKey });
 
-const model = 'gemini-2.5-flash';
+const model = 'gemini-2.5-pro';
 
 const commonInstructions = `
   ROLE: You are "The Accra Vibe Planner", an expert local guide for Accra, Ghana.
   GOAL: Generate creative, fun, and achievable hangout plans tailored to user preferences.
   TONE: Energetic, fun, witty, and like a knowledgeable local. Use local flavor and slang where appropriate.
   CONSTRAINTS:
-  - Location: Search the web, including popular social media like Instagram, for the best and most interesting hideouts, restaurants, beaches, and event spots across the entire Greater Accra Region. Accra is a large and diverse city, so find unique and highly-rated places beyond the most obvious neighborhoods.
+  - Location Search: Search the web, including popular social media like Instagram, for the best and most interesting hideouts, restaurants, beaches, and event spots across the entire Greater Accra Region. Accra is a large and diverse city, so find unique and highly-rated places beyond the most obvious neighborhoods.
   - Be Comprehensive: Your suggestions should be diverse. Include popular mainstream spots like Silverbird Cinemas for movies, but also use your web search capabilities to find timely, specific events. For example, if there is a well-known play by Roverman Productions (Uncle Ebo Whyte) happening within the next week, that is an excellent, high-quality suggestion. Be creative and inclusive in your suggestions.
   - Quality: Suggest only highly-rated places known for good customer service.
   - Format: The output must be structured exactly as requested below. Do not use asterisks or markdown bold/italics. Use simple text and lists.
@@ -83,7 +83,7 @@ export const generatePlanOptions = async (params: HangoutParams) => {
 
     For each of the two options, provide the following:
     1. The specific name of the main venue or location for the plan.
-    2. The specific area or neighborhood of the venue (e.g., Osu, East Legon).
+    2. A specific, searchable location for the venue. This must be a full address or a well-known landmark name that can be accurately found on Google Maps (e.g., "Republic Bar & Grill, Osu, Accra" or "Kwame Nkrumah Memorial Park & Mausoleum"). Do NOT just provide a general neighborhood.
     3. The Google Maps rating (e.g., "Rating: 4.5/5 stars"). If unavailable, state "Rating: Not available".
     4. The opening hours for the venue (e.g., "9:00 AM - 10:00 PM"). If unavailable, state "Not available".
     5. An "Essentials Checklist" with the following details, each on a new line starting with a hyphen:
@@ -99,7 +99,7 @@ export const generatePlanOptions = async (params: HangoutParams) => {
 
     OPTION 1
     Title: [Specific Venue Name for Plan 1]
-    Location: [Neighborhood of the venue for Plan 1]
+    Location: [Specific, searchable location for Plan 1]
     Rating: [Google Maps Rating for main venue]
     Opening Hours: [Opening hours for main venue]
     Essentials Checklist:
@@ -113,7 +113,7 @@ export const generatePlanOptions = async (params: HangoutParams) => {
     ---
     OPTION 2
     Title: [Specific Venue Name for Plan 2]
-    Location: [Neighborhood of the venue for Plan 2]
+    Location: [Specific, searchable location for Plan 2]
     Rating: [Google Maps Rating for main venue]
     Opening Hours: [Opening hours for main venue]
     Essentials Checklist:
@@ -165,7 +165,8 @@ export const getTravelDetails = async (origin: string, plan: string) => {
         
         Required Output Format (strictly follow this template):
 
-        Travel Estimate
+        Title: Travel Details
+        Travel Estimate:
         - Distance: [Estimated distance in km]
         - Travel Time: [Estimated travel time, considering typical Accra traffic for the destination at this specific time]
         - Traffic: [A brief, helpful comment on the current or expected traffic situation based on the time, e.g., "Traffic is usually light around this time," or "Expect heavy traffic on the Spintex Road as it is rush hour."]

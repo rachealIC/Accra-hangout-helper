@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Accra Vibe Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class'
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
@@ -12,6 +17,9 @@
       body {
         font-family: 'Dosis', sans-serif;
         background-color: #FFFCF5;
+      }
+      .dark body {
+        background-color: #0f172a; /* slate-900 */
       }
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Fredoka', sans-serif;
@@ -68,9 +76,34 @@
         0%, 100% { transform: translateY(0) rotate(-2deg); }
         50% { transform: translateY(-3px) rotate(2deg); }
       }
+      /* New walking animations */
       @keyframes walk-cycle {
          0%, 100% { transform: translateY(0); }
          50% { transform: translateY(-4px); }
+      }
+      @keyframes walk-leg-1 {
+        0%, 100% { transform: rotate(-20deg); }
+        50% { transform: rotate(25deg); }
+      }
+      @keyframes walk-leg-2 {
+        0%, 100% { transform: rotate(25deg); }
+        50% { transform: rotate(-20deg); }
+      }
+      @keyframes walk-arm-1 {
+        0%, 100% { transform: rotate(15deg); }
+        50% { transform: rotate(-10deg); }
+      }
+       @keyframes walk-arm-2 {
+        0%, 100% { transform: rotate(-10deg); }
+        50% { transform: rotate(15deg); }
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+       @keyframes wave {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-20deg); }
       }
       .animate-pulse-subtle {
         animation: pulse-subtle 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
@@ -92,6 +125,36 @@
           transform: translateY(110vh) rotate(720deg);
           opacity: 0;
         }
+      }
+      /* Styles for screenshotting - force light theme */
+      .capturing {
+        padding: 2rem !important;
+        background-color: #FFFCF5 !important;
+      }
+      .capturing * {
+        color: #3E0703 !important; /* Force text color */
+      }
+      .capturing > div { /* This targets the plan cards inside */
+        background-color: white !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05) !important;
+        border: 1px solid #F3EADC !important;
+      }
+      .capturing .icon-fill-capture {
+        color: #8C1007 !important; /* Force icon color */
+      }
+      .capturing .animate-slide-in {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      @keyframes move-road {
+        from { transform: translateX(0); }
+        to { transform: translateX(-100px); }
+      }
+      .dark .road-line {
+        stroke: rgba(255, 252, 245, 0.2);
       }
     </style>
   <script type="importmap">
