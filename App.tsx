@@ -14,7 +14,7 @@ import PlanDisplay from './components/PlanDisplay';
 import DynamicLoading from './components/DynamicLoading';
 import HistoryPanel from './components/HistoryPanel';
 import Confetti from './components/Confetti';
-import { HistoryIcon, SunIcon, MoonIcon } from './components/Icons';
+import { HistoryIcon, SunIcon, MoonIcon, HeartIcon } from './components/Icons';
 import LandingTrotro from './components/LandingTrotro';
 
 type AppState = 'WELCOME' | 'GATHERING_INPUT' | 'LOADING' | 'SHOWING_OPTIONS' | 'ASKING_LOCATION' | 'SHOWING_FINAL_PLAN' | 'ERROR';
@@ -388,7 +388,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#FFFCF5] dark:bg-slate-900 overflow-hidden">
+    <div className="relative min-h-screen bg-[#FFFCF5] dark:bg-slate-900 overflow-hidden pb-10">
         {showConfetti && <Confetti />}
         <div className="fixed top-4 right-4 z-30 flex items-center gap-2">
             <button
@@ -419,6 +419,9 @@ const App: React.FC = () => {
             onClose={() => setIsHistoryPanelOpen(false)}
             onRatePlan={handleRatePlan}
         />
+        <footer className="fixed bottom-0 left-0 right-0 p-3 text-center text-xs text-[#660B05]/80 dark:text-slate-400 bg-[#FFFCF5]/50 dark:bg-slate-900/50 backdrop-blur-sm z-20">
+            developed by Racheal Kuranchie, kuranchieracheal35@gmail.com, with love <HeartIcon />
+        </footer>
     </div>
   );
 };
