@@ -34,7 +34,31 @@ const loadingTexts = [
   "The planner has reviewed your Vibe and is asking a crucial question:   'Are you sure you don't just want to order pizza and watch Netflix?'  We support either choice! Generating both possibilities now!",
   "Driver: 'Ah, this GPS! I know the route more than you! Just relax, Madam/Oga.  The system is calculating the shortest cut past the Mall traffic.   We will drop your Vibe plan soonest!'",
   "Chaley, where are you? Planner's Response: Oh, I'm in a car, just turning onto Oxford Street...   (Disclaimer: We haven't even taken our bath yet.  The plan is still loading!)",
-  "You chose Trotro and you're in a hurry?  Hmm... Looks like somebody is new to Accra, Chale! Your plan is loading, but maybe call a Bolt next time?   Just kidding! (Mostly.)"
+  "You chose Trotro and you're in a hurry?  Hmm... Looks like somebody is new to Accra, Chale! Your plan is loading, but maybe call a Bolt next time?   Just kidding! (Mostly.)",
+
+
+  
+  "Ei, the algorithm just saw your budget and shouted ‘Charle, this be small!’ Negotiating with the vibes to stretch that cedi. Loading…",
+  
+  "Server just entered Labadi traffic at 6 PM. Driver says ‘no worry, we go fly top.’ Plan will land when we escape this go-slow!",
+  "Your vibe is too hot, the planner had to pause and fan itself with a pure water. Cooling down… almost ready!",
+  "Loading interrupted: the system is arguing with MTN over 1GB bundle. ‘Ei, why the data finish so fast?’ Plan resumes after top-up!",
+ 
+  "Planner dey do ‘by-force’ small chops survey: kelewele or plantain chips? Democracy in progress, results loading…",
+ 
+  "The vibe police just pulled us over: ‘License for this level of enjoyment?’ Paying  with laughter… plan cleared for takeoff!",
+
+  // New relatable comedy lines inspired by Ghanaian Twitter vibes, including funny political takes
+  "Loading glitch! The planner just tweeted 'Tweaa!' at a politician blocking the vibe route. Now it's viral—waiting for the 'Am I your coequal?!' comeback before we proceed, chale!",
+  "Ei, server dey argue like Parliament over galamsey fines. 'No mercury in the vibes!' Recalculating eco-friendly paths past the polluted spots. Hold on!",
+  
+  
+  "Hold tight, the system just quoted 'Sika mpɛ dedɛ' while crunching your budget. Money no like noise, but your plan will shout value! Almost there.",
+ 
+  "Ei, the vibe AI just saw the cybersecurity bill and whispered, 'Offensive comment? Jail?' Keeping it chill and non-political. Plan loading quietly...",
+ 
+  "Your plan's stuck in Dumsor mode—power outage from budget cuts! Finding a generator spot. No worry, the vibes will light up soon!",
+  "Haha, planner just challenged a ghost name in the NSA fraud list. 'You no dey exist!' Verifying real spots only. Authentic plan incoming!"
 ];
 
 
@@ -68,7 +92,7 @@ const DynamicLoading = () => {
         });
         setIsTextFading(false); // Start fade in
       }, 500); // Corresponds to the transition duration
-    }, 7700);
+    }, 8000);
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);

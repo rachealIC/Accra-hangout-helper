@@ -1,6 +1,7 @@
+
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon, TimeIcon, CalendarIcon } from './Icons';
+import { ShareIcon, RestartIcon, LocationIcon, TravelIcon, TipIcon, MissionIcon, CostIcon, VibeIcon, PicnicIcon, DownloadIcon, MapItIcon, ChecklistIcon, TimeIcon, CalendarIcon, WeatherIcon } from './Icons';
 
 // A simple parser to render the AI's structured text response with Zen styling.
 const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: boolean }) => {
@@ -18,6 +19,7 @@ const ZenParser = ({ content, isFinalPlan }: { content: string, isFinalPlan?: bo
         'Location': <LocationIcon />,
         'Essentials Checklist': <ChecklistIcon />,
         'Opening Hours': <TimeIcon />,
+        'Weather Forecast': <WeatherIcon />,
     };
 
     for (const line of lines) {
@@ -81,9 +83,10 @@ interface PlanDisplayProps {
   onSelectPlan?: (planContent: string) => void;
   onFindCloser?: () => void;
   isFinalPlan?: boolean;
+  isRequestingLocation?: boolean;
 }
 
-const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isFinalPlan }) => {
+const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSelectPlan, onFindCloser, isFinalPlan, isRequestingLocation }) => {
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const planContainerRef = useRef<HTMLDivElement>(null);
@@ -224,9 +227,10 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
                     <p className="text-[#660B05] dark:text-slate-300 mb-4 text-lg">Let's find something a little closer to you.</p>
                     <button
                         onClick={onFindCloser}
-                        className="py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] transition-all duration-300 transform hover:scale-105"
+                        disabled={isRequestingLocation}
+                        className="py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-wait"
                     >
-                        Find Closer Vibes
+                        {isRequestingLocation ? 'Getting Location...' : 'Find Closer Vibes'}
                     </button>
                 </div>
             )}

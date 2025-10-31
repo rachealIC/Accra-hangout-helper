@@ -27,7 +27,7 @@ export const generatePlanOptions = async (params: HangoutParams) => {
     'Relax & Unwind': "This means the user wants a low-key, calm experience. Think quiet cafes, library visits, spa days, or just a cheap and chill hangout.",
     'Food & Nightlife': "The user is looking for great food or a fun night out. Suggest top-rated restaurants, cool bars with live music, brunch spots, etc.",
     'Arts & Culture': "Focus on historical sites, art galleries, museums, and creative workshops.",
-    'Active & Adventure': "Suggest something energetic like go-karting, paintball, hiking, beach sports, or dance classes.",
+    'Active & Adventure': "Suggest something energetic like go-karting, paintball, hiking, beach sports, tennis,  or dance classes. places like university of ghana sports complex",
     'Movies & Plays': "The user wants to see a movie or a live performance. Use your web search capabilities to find current movie listings at popular cinemas like Silverbird, as well as any upcoming plays (like those from Roverman Productions) or comedy shows happening in Accra within the current week or month. This requires timely, event-based information.",
     'Romantic Date': "This is for a romantic date. Prioritize places with a cozy, intimate ambiance, excellent customer service, and a great atmosphere for conversation. The user has specified if it's for breakfast, lunch, or dinner.",
     'Picnic & Parks': "The user wants a picnic. Suggest specific, neat, and quiet parks or beaches suitable for a picnic. This option needs extra details.",
@@ -147,36 +147,42 @@ export const generatePlanOptions = async (params: HangoutParams) => {
 };
 
 
-export const getTravelDetails = async (origin: string, plan: string) => {
-    const now = new Date();
-    const formattedTime = now.toLocaleString('en-US', {
-        weekday: 'long',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-    });
-
+export const getTravelDetails = async (origin: string, destination: string, intendedTime: string) => {
     const prompt = `
-        A user is starting from "${origin}" and wants to go on the following hangout plan in Accra:
-        ---
-        ${plan}
-        ---
-        The current time is ${formattedTime}. Based on their starting point and the current time, calculate the travel logistics.
-        
-        Required Output Format (strictly follow this template):
+        ROLE: You are a travel logistics assistant for Accra, Ghana.
+        GOAL: Provide real-time travel and weather details for a user's trip using available tools.
 
-        Title: Travel Details
+        You MUST use your tools to answer this request.
+        - Use Google Maps to get accurate, real-time travel information, accounting for traffic at the specified time.
+        - Use Google Search to get the most up-to-date weather forecast for the destination.
+
+        The user's trip details are:
+        - Origin: "${origin}"
+        - Destination: "${destination}"
+        - Intended Travel Time: "${intendedTime}"
+
+        Task:
+        1. Using Google Maps, calculate the estimated driving distance and travel time from the origin to the destination.
+        2. Using Google Maps, provide a brief, one-sentence comment on the likely traffic conditions for this route at the specified time.
+        3. Using Google Search, provide a brief, one-sentence weather forecast for the destination area around the specified time.
+        
+        Required Output Format (strictly follow this template, using plain text without any markdown like asterisks or bolding):
+
+        Title: Travel & Weather Forecast
         Travel Estimate:
-        - Distance: [Estimated distance in km]
-        - Travel Time: [Estimated travel time, considering typical Accra traffic for the destination at this specific time]
-        - Traffic: [A brief, helpful comment on the current or expected traffic situation based on the time, e.g., "Traffic is usually light around this time," or "Expect heavy traffic on the Spintex Road as it is rush hour."]
+        - Distance: [Estimated distance in km based on your tool search]
+        - Travel Time: [Estimated travel time based on your tool search]
+        - Traffic: [Brief comment on traffic based on your tool search]
+        Weather Forecast: [Brief weather forecast based on your tool search]
     `;
 
     try {
-        // This call doesn't need grounding as the destination is in the text.
         const response = await ai.models.generateContent({
             model,
             contents: prompt,
+            config: {
+                tools: [{ googleMaps: {} }, { googleSearch: {} }],
+            }
         });
         const text = response.text;
         if (!text) throw new Error('No travel details generated.');

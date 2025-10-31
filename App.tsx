@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   VIBE_OPTIONS,
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [finalPlan, setFinalPlan] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [userOrigin, setUserOrigin] = useState<string>('');
+  const [intendedTime, setIntendedTime] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [planHistory, setPlanHistory] = useState<SavedPlan[]>([]);
@@ -38,6 +40,7 @@ const App: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -180,11 +183,13 @@ const App: React.FC = () => {
           setAppState('ERROR');
           return;
       }
-
-      setAppState('LOADING');
       
+      setIsRequestingLocation(true);
       navigator.geolocation.getCurrentPosition(
           (position) => {
+              setIsRequestingLocation(false);
+              // Now that we have permission, show the loading screen.
+              setAppState('LOADING');
               const newLocation = {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
@@ -197,9 +202,24 @@ const App: React.FC = () => {
               setParams(closerParams); // Update main params state
               handleSubmit(closerParams);
           },
-          (err) => {
+          (err: GeolocationPositionError) => {
+              setIsRequestingLocation(false);
               console.error("Error getting location: ", err);
-              setError("Couldn't get your location. Please allow location access and try again.");
+              
+              let userMessage = "Couldn't get your location. Please allow location access and try again.";
+              switch (err.code) {
+                  case err.PERMISSION_DENIED:
+                      userMessage = "It looks like you've denied location access. Please enable it in your browser settings to find closer vibes.";
+                      break;
+                  case err.POSITION_UNAVAILABLE:
+                      userMessage = "We couldn't determine your current location. Please check your network connection or try again later.";
+                      break;
+                  case err.TIMEOUT:
+                      userMessage = "Finding your location took too long. Please try again.";
+                      break;
+              }
+
+              setError(userMessage);
               setAppState('ERROR');
           }
       );
@@ -212,10 +232,28 @@ const App: React.FC = () => {
 
   const handleLocationSubmit = async () => {
       const trimmedOrigin = userOrigin.trim();
-      if (!trimmedOrigin || !selectedPlan) return;
+      const trimmedTime = intendedTime.trim();
+      if (!trimmedOrigin || !trimmedTime || !selectedPlan) return;
+      
       setAppState('LOADING');
+
+      const getDestinationFromPlan = (plan: string): string | null => {
+          const lines = plan.split('\n');
+          const locationLine = lines.find(line => line.trim().startsWith('Location:'));
+          if (!locationLine) return null;
+          return locationLine.replace('Location:', '').trim();
+      };
+      
+      const destination = getDestinationFromPlan(selectedPlan);
+
+      if (!destination) {
+          setError('Could not find a destination in the selected plan.');
+          setAppState('ERROR');
+          return;
+      }
+
       try {
-          const travelInfo = await getTravelDetails(trimmedOrigin, selectedPlan);
+          const travelInfo = await getTravelDetails(trimmedOrigin, destination, trimmedTime);
           const fullPlan = `${selectedPlan}\n\n---\n${travelInfo}`;
           setFinalPlan(fullPlan);
           savePlanToHistory(fullPlan);
@@ -235,6 +273,7 @@ const App: React.FC = () => {
     setFinalPlan(null);
     setSelectedPlan(null);
     setUserOrigin('');
+    setIntendedTime('');
     setError(null);
     setLocationError(null);
     setAppState('WELCOME');
@@ -279,27 +318,37 @@ const App: React.FC = () => {
           onRestart={handleRestart} 
           onSelectPlan={handlePlanSelect}
           onFindCloser={handleFindCloser}
+          isRequestingLocation={isRequestingLocation}
       />;
     }
     if (appState === 'ASKING_LOCATION') {
        return (
           <div className="flex flex-col justify-center items-center p-4 h-full z-10">
                <div className="w-full max-w-md bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 text-center animate-slide-in">
-                   <h2 className="text-2xl font-bold text-[#3E0703] dark:text-slate-100 mb-4">One last thing...</h2>
-                   <p className="text-[#660B05] dark:text-slate-300 mb-6 text-lg">To calculate the travel time and traffic, where will you be starting from?</p>
-                   <input
-                      type="text"
-                      value={userOrigin}
-                      onChange={(e) => setUserOrigin(e.target.value)}
-                      placeholder="e.g., Accra Mall or East Legon"
-                      className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
-                   />
+                   <h2 className="text-2xl font-bold text-[#3E0703] dark:text-slate-100 mb-4">Where & When?</h2>
+                   <p className="text-[#660B05] dark:text-slate-300 mb-6 text-lg">To forecast travel time and weather, tell us where you're starting from and when you plan to go.</p>
+                   <div className="space-y-4">
+                       <input
+                          type="text"
+                          value={userOrigin}
+                          onChange={(e) => setUserOrigin(e.target.value)}
+                          placeholder="e.g., Accra Mall or East Legon"
+                          className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
+                       />
+                       <input
+                          type="text"
+                          value={intendedTime}
+                          onChange={(e) => setIntendedTime(e.target.value)}
+                          placeholder="e.g., Tomorrow at 5 PM, Saturday morning"
+                          className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
+                       />
+                   </div>
                    <button
                       onClick={handleLocationSubmit}
-                      disabled={!userOrigin.trim()}
-                      className="w-full mt-4 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] disabled:bg-[#8C1007]/50 dark:disabled:bg-[#E18C44]/50 transition-all"
+                      disabled={!userOrigin.trim() || !intendedTime.trim()}
+                      className="w-full mt-6 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] disabled:bg-[#8C1007]/50 dark:disabled:bg-[#E18C44]/50 transition-all"
                    >
-                      Get Travel Details
+                      Get Forecast
                    </button>
                </div>
           </div>
@@ -335,7 +384,7 @@ const App: React.FC = () => {
                  className="absolute top-2 left-3 sm:top-3 sm:left-4 text-[#3E0703] dark:text-slate-200 hover:text-[#8C1007] dark:hover:text-white font-bold transition-all flex items-center text-lg py-3 px-4 sm:py-4 rounded-lg hover:bg-[#8C1007]/10 dark:hover:bg-[#E18C44]/20"
                  aria-label="Go back to previous question"
                >
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth={2.5}>
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                  </svg>
                  Back
@@ -420,7 +469,7 @@ const App: React.FC = () => {
             onRatePlan={handleRatePlan}
         />
         <footer className="fixed bottom-0 left-0 right-0 p-3 text-center text-xs text-[#660B05]/80 dark:text-slate-400 bg-[#FFFCF5]/50 dark:bg-slate-900/50 backdrop-blur-sm z-20">
-            developed by Racheal Kuranchie, kuranchieracheal35@gmail.com, with love <HeartIcon />
+            Developed by Racheal Kuranchie, kuranchieracheal35@gmail.com, with love <HeartIcon />
         </footer>
     </div>
   );
