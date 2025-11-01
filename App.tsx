@@ -324,31 +324,39 @@ const App: React.FC = () => {
     if (appState === 'ASKING_LOCATION') {
        return (
           <div className="flex flex-col justify-center items-center p-4 h-full z-10">
-               <div className="w-full max-w-md bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 text-center animate-slide-in">
-                   <h2 className="text-2xl font-bold text-[#3E0703] dark:text-slate-100 mb-4">Where & When?</h2>
-                   <p className="text-[#660B05] dark:text-slate-300 mb-6 text-lg">To forecast travel time and weather, tell us where you're starting from and when you plan to go.</p>
-                   <div className="space-y-4">
-                       <input
-                          type="text"
-                          value={userOrigin}
-                          onChange={(e) => setUserOrigin(e.target.value)}
-                          placeholder="e.g., Accra Mall or East Legon"
-                          className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
-                       />
-                       <input
-                          type="text"
-                          value={intendedTime}
-                          onChange={(e) => setIntendedTime(e.target.value)}
-                          placeholder="e.g., Tomorrow at 5 PM, Saturday morning"
-                          className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
-                       />
+               <div className="w-full max-w-md bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-8 rounded-lg shadow-lg border border-white/50 dark:border-slate-700/50 text-left animate-slide-in">
+                   <h2 className="text-2xl font-bold text-[#3E0703] dark:text-slate-100 mb-2 text-center">One Last Step...</h2>
+                   <p className="text-[#660B05] dark:text-slate-300 mb-6 text-lg text-center">Let's check the route! Tell us your starting point and travel time for a live traffic and weather forecast.</p>
+                   <div className="space-y-6">
+                       <div>
+                           <label htmlFor="userOrigin" className="block text-lg font-semibold text-[#3E0703] dark:text-slate-200 mb-2">Where will you be coming from?</label>
+                           <input
+                              id="userOrigin"
+                              type="text"
+                              value={userOrigin}
+                              onChange={(e) => setUserOrigin(e.target.value)}
+                              placeholder="e.g., Accra Mall or East Legon"
+                              className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
+                           />
+                       </div>
+                       <div>
+                            <label htmlFor="intendedTime" className="block text-lg font-semibold text-[#3E0703] dark:text-slate-200 mb-2">What time do you plan to go?</label>
+                           <input
+                              id="intendedTime"
+                              type="text"
+                              value={intendedTime}
+                              onChange={(e) => setIntendedTime(e.target.value)}
+                              placeholder="e.g., Tomorrow at 5 PM, Saturday morning"
+                              className="w-full px-4 py-3 border-2 border-[#8C1007]/50 dark:border-[#E18C44]/50 bg-transparent dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-[#8C1007] dark:focus:ring-[#E18C44] focus:border-[#8C1007] dark:focus:border-[#E18C44] outline-none transition text-[#3E0703] dark:text-slate-100 placeholder:text-[#660B05]/70 dark:placeholder:text-slate-400"
+                           />
+                       </div>
                    </div>
                    <button
                       onClick={handleLocationSubmit}
                       disabled={!userOrigin.trim() || !intendedTime.trim()}
-                      className="w-full mt-6 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] disabled:bg-[#8C1007]/50 dark:disabled:bg-[#E18C44]/50 transition-all"
+                      className="w-full mt-8 py-3 px-6 bg-[#8C1007] dark:bg-[#E18C44] text-white dark:text-slate-900 font-bold rounded-lg shadow-md hover:bg-[#660B05] dark:hover:bg-[#f3a469] disabled:bg-[#8C1007]/50 dark:disabled:bg-[#E18C44]/50 transition-all"
                    >
-                      Get Forecast
+                      Check Route & Weather
                    </button>
                </div>
           </div>

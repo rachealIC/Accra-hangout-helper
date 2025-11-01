@@ -149,31 +149,29 @@ export const generatePlanOptions = async (params: HangoutParams) => {
 
 export const getTravelDetails = async (origin: string, destination: string, intendedTime: string) => {
     const prompt = `
-        ROLE: You are a travel logistics assistant for Accra, Ghana.
-        GOAL: Provide real-time travel and weather details for a user's trip using available tools.
+        You are a travel logistics assistant for Accra, Ghana.
+        Your task is to provide travel and weather details for a user's trip.
+        You MUST use your tools to get this information. Do not apologize if you cannot find it; make a best-effort attempt.
 
-        You MUST use your tools to answer this request.
-        - Use Google Maps to get accurate, real-time travel information, accounting for traffic at the specified time.
-        - Use Google Search to get the most up-to-date weather forecast for the destination.
+        Trip Details:
+        - Start Point: "${origin}"
+        - End Point: "${destination}"
+        - Departure Time: "${intendedTime}"
 
-        The user's trip details are:
-        - Origin: "${origin}"
-        - Destination: "${destination}"
-        - Intended Travel Time: "${intendedTime}"
+        Instructions:
+        1.  **Use Google Maps Tool**: Find the driving distance and estimated travel time between the Start Point and End Point. Account for typical traffic conditions around the Departure Time.
+        2.  **Use Google Maps Tool**: Provide a brief, one-sentence summary of the traffic conditions.
+        3.  **Use Google Search Tool**: Find the weather forecast for the End Point around the Departure Time.
+        4.  **Formatting**: Present the information exactly as specified in the template below. Do not add any conversational text, apologies, or markdown (like asterisks).
 
-        Task:
-        1. Using Google Maps, calculate the estimated driving distance and travel time from the origin to the destination.
-        2. Using Google Maps, provide a brief, one-sentence comment on the likely traffic conditions for this route at the specified time.
-        3. Using Google Search, provide a brief, one-sentence weather forecast for the destination area around the specified time.
-        
-        Required Output Format (strictly follow this template, using plain text without any markdown like asterisks or bolding):
+        Required Output Format:
 
         Title: Travel & Weather Forecast
         Travel Estimate:
-        - Distance: [Estimated distance in km based on your tool search]
-        - Travel Time: [Estimated travel time based on your tool search]
-        - Traffic: [Brief comment on traffic based on your tool search]
-        Weather Forecast: [Brief weather forecast based on your tool search]
+        - Distance: [Distance in km]
+        - Travel Time: [Estimated travel time, e.g., "30-45 minutes"]
+        - Traffic: [Brief traffic summary]
+        Weather Forecast: [Brief weather forecast]
     `;
 
     try {

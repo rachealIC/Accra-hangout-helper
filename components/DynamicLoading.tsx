@@ -36,7 +36,6 @@ const loadingTexts = [
   "Chaley, where are you? Planner's Response: Oh, I'm in a car, just turning onto Oxford Street...   (Disclaimer: We haven't even taken our bath yet.  The plan is still loading!)",
   "You chose Trotro and you're in a hurry?  Hmm... Looks like somebody is new to Accra, Chale! Your plan is loading, but maybe call a Bolt next time?   Just kidding! (Mostly.)",
 
-
   
   "Ei, the algorithm just saw your budget and shouted ‘Charle, this be small!’ Negotiating with the vibes to stretch that cedi. Loading…",
   
