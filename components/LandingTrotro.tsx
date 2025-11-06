@@ -38,14 +38,19 @@ const LandingTrotro = () => (
                         </linearGradient>
                     </defs>
                     <ellipse cx="120" cy="148" rx="85" ry="10" fill="black" opacity="0.1" />
-                    <rect x="10" y="40" width="220" height="80" rx="10" fill="#f8fafc" stroke="#1e293b" strokeWidth="4"/>
+                    {/* Main Body Fill */}
+                    <rect x="10" y="40" width="220" height="80" rx="10" fill="#f8fafc"/>
+                    {/* Red Stripe */}
+                    <rect x="10" y="90" width="220" height="15" fill="#8C1007" />
+                    {/* Main Body Stroke (drawn on top to fix artifacts) */}
+                    <path d="M20 40 H 220 A 10 10 0 0 1 230 50 V 110 A 10 10 0 0 1 220 120 H 20 A 10 10 0 0 1 10 110 V 50 A 10 10 0 0 1 20 40 Z" stroke="#1e293b" strokeWidth="4" fill="none" />
+                    
                     {/* Mate (conductor) */}
                     <path d="M230 70 V 105 H 210 V 70 Z" fill="#FFFCF5" stroke="#1e293b" strokeWidth="2" />
                     <g style={{transform: 'translate(213px, 75px)', animation: 'wave 1.5s ease-in-out infinite'}}>
                       <circle cx="0" cy="-5" r="7" fill="#660B05" />
                       <rect x="-3" y="2" width="6" height="20" rx="3" fill="#660B05" />
                     </g>
-                    <rect x="10" y="90" width="220" height="15" fill="#8C1007" />
                     {/* Windows */}
                     <rect x="25" y="50" width="35" height="25" fill="url(#landing-window)" opacity="0.8"/>
                     <rect x="70" y="50" width="35" height="25" fill="url(#landing-window)" opacity="0.8"/>

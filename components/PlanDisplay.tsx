@@ -141,7 +141,7 @@ const parseTravelDetails = (content: string): ParsedTravelDetails | null => {
   };
 };
 
-const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetails, intendedTime }: {
+const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetails, intendedTime, isRecommended }: {
   plan: ParsedPlan;
   onSelect?: () => void;
   onRegenerate?: () => void;
@@ -149,6 +149,7 @@ const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetail
   isFinal?: boolean;
   travelDetails?: ParsedTravelDetails | null;
   intendedTime?: string;
+  isRecommended?: boolean;
 }) => {
     const [imgSrc, setImgSrc] = useState(plan.imageUrl);
     
@@ -186,6 +187,12 @@ const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetail
     
     return (
         <div ref={cardRef} className="relative w-full bg-white dark:bg-slate-800 rounded-3xl shadow-lg overflow-hidden flex flex-col">
+            {isRecommended && (
+                <div className="absolute top-0 left-0 z-10 bg-gradient-to-br from-[#8C1007] to-[#E18C44] text-white text-xs font-bold px-4 py-1 rounded-br-xl rounded-tl-2xl shadow-lg flex items-center gap-x-1.5">
+                    <RatingStarIcon className="h-4 w-4" />
+                    <span>Recommended</span>
+                </div>
+            )}
             {ratingValue && (
                 <div className="absolute top-4 right-4 z-10 flex items-center bg-black/60 text-white text-sm font-bold px-3 py-1.5 rounded-full">
                     <RatingStarIcon className="h-4 w-4 text-yellow-300" />
@@ -459,6 +466,7 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
                         plan={plan}
                         onSelect={() => onSelectPlan && onSelectPlan(plan.rawContent)}
                         onRegenerate={plan.title === recommendedPlanTitle && onRegenerate ? onRegenerate : undefined}
+                        isRecommended={plan.title === recommendedPlanTitle}
                     />
                 </div>
             ))}
@@ -473,19 +481,6 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
                 {isRequestingLocation ? 'Getting Location...' : "Not feeling it? Find something closer!"}
             </button>
         </div>
-        
-        {recommendation && (
-            <div className="mt-8 animate-slide-in w-full max-w-lg">
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center shadow-lg border border-gray-200 dark:border-slate-700">
-                    <p className="font-sans font-semibold text-xl text-[#3E0703] dark:text-slate-200 flex items-center justify-center gap-x-2">
-                        <RatingStarIcon className="h-6 w-6 text-yellow-500" />
-                        <span>
-                           Recommended: <span className="font-bold text-[#8C1007] dark:text-[#E18C44]">{recommendedPlanTitle}</span>
-                        </span>
-                    </p>
-                </div>
-            </div>
-        )}
     </div>
   );
 };

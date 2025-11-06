@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { HangoutParams, SavedPlan, Location, AppState } from '../types';
 import { generatePlanOptions, getTravelDetails } from '../services/geminiService';
+import { initiatePayment } from '../services/paystackService';
+import { verifyPayment } from '../api/verify-payment';
+
 
 const LOCAL_STORAGE_KEY = 'accra-vibe-plan-history';
 const RATE_LIMIT_KEY = 'accra-vibe-last-plan-timestamp';
@@ -143,22 +146,52 @@ export const useVibePlanner = ({ setPlanHistory }: UseVibePlannerProps) => {
     setAppState('GATHERING_INPUT');
   };
 
-  const handleSubscribe = (plan: 'micro-boost' | 'power-planner') => {
-      let expiry: number;
-      const lastPlanTimestamp = localStorage.getItem(RATE_LIMIT_KEY);
-      const initialPlanCount = lastPlanTimestamp ? 1 : 0;
+  const activateSubscription = (plan: 'micro-boost' | 'power-planner') => {
+    let expiry: number;
+    const lastPlanTimestamp = localStorage.getItem(RATE_LIMIT_KEY);
+    const initialPlanCount = lastPlanTimestamp ? 1 : 0;
 
-      if (plan === 'micro-boost') {
-          expiry = Date.now() + MICRO_BOOST_VALIDITY_MS;
-          localStorage.setItem(SUB_STATUS_KEY, 'micro-boost');
-      } else {
-          expiry = Date.now() + POWER_PLANNER_VALIDITY_MS;
-          localStorage.setItem(SUB_STATUS_KEY, 'power-planner');
+    if (plan === 'micro-boost') {
+        expiry = Date.now() + MICRO_BOOST_VALIDITY_MS;
+        localStorage.setItem(SUB_STATUS_KEY, 'micro-boost');
+    } else {
+        expiry = Date.now() + POWER_PLANNER_VALIDITY_MS;
+        localStorage.setItem(SUB_STATUS_KEY, 'power-planner');
+    }
+    localStorage.setItem(SUB_EXPIRY_KEY, expiry.toString());
+    localStorage.setItem(PLAN_COUNT_KEY, initialPlanCount.toString());
+
+    // Transition to the main app after successful activation
+    setAppState('GATHERING_INPUT');
+    setCurrentStep(0);
+  };
+
+  const handlePaymentInitiation = (plan: 'micro-boost' | 'power-planner', email: string) => {
+    const planDetails = {
+      'micro-boost': { amount: 3 },
+      'power-planner': { amount: 60 },
+    };
+
+    initiatePayment({
+      email,
+      amount: planDetails[plan].amount,
+      onSuccess: async (response) => {
+        // Payment modal was successful, now verify on the (mock) backend
+        alert("Payment successful! Verifying your transaction...");
+        const verification = await verifyPayment(response.reference);
+        if (verification.success) {
+          alert("Verification successful! Your plan is activated.");
+          activateSubscription(plan);
+        } else {
+          setError("Payment verification failed. Please contact support.");
+          setAppState('ERROR');
+        }
+      },
+      onClose: () => {
+        // User closed the modal
+        alert("Payment was not completed.");
       }
-      localStorage.setItem(SUB_EXPIRY_KEY, expiry.toString());
-      localStorage.setItem(PLAN_COUNT_KEY, initialPlanCount.toString());
-
-      setAppState('GATHERING_INPUT');
+    });
   };
 
   const handleRegenerate = () => {
@@ -279,7 +312,7 @@ export const useVibePlanner = ({ setPlanHistory }: UseVibePlannerProps) => {
     currentStep,
     isTransitioning,
     handleStartPlanning,
-    handleSubscribe,
+    handlePaymentInitiation,
     handleOptionSelect,
     handleSubmit,
     handleBack,

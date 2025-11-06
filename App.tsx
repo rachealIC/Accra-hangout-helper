@@ -31,7 +31,7 @@ const App: React.FC = () => {
     currentStep,
     isTransitioning,
     handleStartPlanning,
-    handleSubscribe,
+    handlePaymentInitiation,
     handleOptionSelect,
     handleBack,
     handleSurpriseMe,
@@ -98,7 +98,7 @@ const App: React.FC = () => {
       case 'WELCOME':
         return <WelcomeScreen onStart={handleStartPlanning} />;
       case 'RATE_LIMITED':
-        return <RateLimitScreen timeLeft={rateLimitTimeLeft} onSubscribe={handleSubscribe} />;
+        return <RateLimitScreen timeLeft={rateLimitTimeLeft} onInitiatePayment={handlePaymentInitiation} />;
       case 'GATHERING_INPUT':
         return (
           <Questionnaire 
