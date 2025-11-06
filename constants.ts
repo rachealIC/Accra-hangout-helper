@@ -8,7 +8,7 @@ interface Option<T> {
 export const VIBE_OPTIONS: Option<Vibe>[] = [
   { name: 'Relax & Unwind', value: 'Relax & Unwind' },
   { name: 'Food & Nightlife', value: 'Food & Nightlife' },
-  { name: 'Arts & Culture', value: 'Arts & Culture' },
+  { name: 'Rich Kids Sports', value: 'Rich Kids Sports' },
   { name: 'Active & Adventure', value: 'Active & Adventure' },
   { name: 'Movies & Plays', value: 'Movies & Plays' },
   { name: 'Romantic Date', value: 'Romantic Date' },
@@ -46,6 +46,7 @@ export const TIMING_OPTIONS: Option<Timing>[] = [
 
 export const DATE_MEAL_OPTIONS: Option<DateMeal>[] = [
     { name: 'Breakfast', value: 'Breakfast' }, 
+    { name: 'Brunch', value: 'Brunch' },
     { name: 'Lunch', value: 'Lunch' }, 
     { name: 'Dinner', value: 'Dinner' }
 ];

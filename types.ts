@@ -1,9 +1,13 @@
+// Fix: Removed self-import from './types' that was causing declaration conflicts.
+
+// Fix: Removed the import from './constants' which was causing a circular dependency.
+
 // Fix: Replaced incorrect constant definitions with proper type exports.
 // This resolves circular dependency issues and defines the types used throughout the application.
 export type Vibe =
   | 'Relax & Unwind'
   | 'Food & Nightlife'
-  | 'Arts & Culture'
+  | 'Rich Kids Sports'
   | 'Active & Adventure'
   | 'Movies & Plays'
   | 'Romantic Date'
@@ -23,7 +27,7 @@ export type Audience = 'Solo Mission' | 'With the Crew' | 'Just the Two of Us' |
 
 export type Timing = 'Right Now!' | 'Later Today' | 'Sometime This Week' | '';
 
-export type DateMeal = 'Breakfast' | 'Lunch' | 'Dinner' | '';
+export type DateMeal = 'Breakfast' | 'Brunch' | 'Lunch' | 'Dinner' | '';
 
 export type Location = {
   latitude: number;
@@ -39,6 +43,8 @@ export interface HangoutParams {
   location: Location;
   proximity?: 'close' | 'any';
   dateMeal?: DateMeal;
+  specificDateTime?: string;
+  groupSize?: number;
 }
 
 export interface SavedPlan {
@@ -47,3 +53,5 @@ export interface SavedPlan {
   savedAt: string;
   rating: number | null;
 }
+
+export type AppState = 'WELCOME' | 'GATHERING_INPUT' | 'LOADING' | 'SHOWING_OPTIONS' | 'ASKING_LOCATION' | 'SHOWING_FINAL_PLAN' | 'ERROR' | 'RATE_LIMITED';

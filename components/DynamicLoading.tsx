@@ -91,7 +91,7 @@ const DynamicLoading = () => {
         });
         setIsTextFading(false); // Start fade in
       }, 500); // Corresponds to the transition duration
-    }, 8000);
+    }, 8500);
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);

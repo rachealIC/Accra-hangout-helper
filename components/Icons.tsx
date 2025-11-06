@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const VibeIcon = () => (
@@ -76,8 +77,8 @@ export const DownloadIcon = () => (
     </svg>
 );
 
-export const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+export const CalendarIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
 );
@@ -124,21 +125,56 @@ export const WeatherIcon = () => (
   </svg>
 );
 
-
-export const SoloIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-);
-
-export const CrewIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.125-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.125-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-    </svg>
-);
-
 export const HeartIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block align-middle text-[#8C1007] dark:text-[#E18C44]" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+    </svg>
+);
+
+export const CurrentLocationIcon = ({ spinning }: { spinning?: boolean }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${spinning ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+);
+
+export const VoilaSunIcon = () => (
+    <div className="relative inline-block">
+        <span role="img" aria-label="Happy sun" className="text-6xl drop-shadow-lg">☀️</span>
+        <div className="absolute -top-2 -right-14 bg-white dark:bg-slate-700 px-4 py-2 rounded-full shadow-lg">
+            <p className="text-lg font-bold text-[#3E0703] dark:text-slate-200">Voila!</p>
+            <div className="absolute left-2 -bottom-2 w-0 h-0 border-l-[10px] border-l-transparent border-t-[15px] border-t-white dark:border-t-slate-700 transform -rotate-45"></div>
+        </div>
+    </div>
+);
+
+export const RatingStarIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+);
+
+export const DressCodeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 6.5s-1-2-3.5-2-3.5 2-3.5 2" />
+    </svg>
+);
+
+export const NoiseLevelIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.858 15.858a5 5 0 010-7.072m2.828 9.9a9 9 0 010-12.728M12 12a3 3 0 100-6 3 3 0 000 6z" />
+    </svg>
+);
+
+export const SeatingIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2m0-6h10M5 10v2a2 2 0 002 2h10a2 2 0 002-2v-2M5 10V8a2 2 0 012-2h10a2 2 0 012 2v2" />
+    </svg>
+);
+
+export const CrownIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2a1 1 0 01.78.37l3.65 4.37a1 1 0 01-.78 1.63H6.35a1 1 0 01-.78-1.63l3.65-4.37A1 1 0 0110 2zM3 9a1 1 0 000 2h14a1 1 0 100-2H3zM4 13a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" />
     </svg>
 );
