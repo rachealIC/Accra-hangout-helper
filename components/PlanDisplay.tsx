@@ -101,14 +101,11 @@ const parsePlans = (content: string): { plans: ParsedPlan[], recommendation: str
         }
 
         const finalCategory: Vibe = (data.category && Object.keys(defaultImages).includes(data.category)) ? data.category : '';
-        const finalImageUrl = (data.imageUrl && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('data:image')))
-          ? data.imageUrl
-          : defaultImages[finalCategory] || defaultImages[''];
 
         return {
             rawContent: planString,
             title: data.title || 'N/A',
-            imageUrl: finalImageUrl,
+            imageUrl: data.imageUrl || '',
             category: finalCategory,
             location: data.location || 'N/A',
             rating: data.rating || 'N/A',
@@ -151,16 +148,19 @@ const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetail
   intendedTime?: string;
   isRecommended?: boolean;
 }) => {
-    const [imgSrc, setImgSrc] = useState(plan.imageUrl);
-    
+    const [hasImageError, setHasImageError] = useState(false);
+
     useEffect(() => {
-        setImgSrc(plan.imageUrl);
+        setHasImageError(false);
     }, [plan.imageUrl]);
 
     const handleImageError = () => {
-        setImgSrc(defaultImages[plan.category] || defaultImages['']);
+        setHasImageError(true);
     };
     
+    const fallbackSrc = defaultImages[plan.category] || defaultImages[''];
+    const displaySrc = !plan.imageUrl || hasImageError ? fallbackSrc : plan.imageUrl;
+
     const ratingMatch = plan.rating.match(/(\d\.\d|\d)/);
     const ratingValue = ratingMatch ? ratingMatch[0] : null;
     const locationShort = plan.location.split(',')[0];
@@ -202,7 +202,7 @@ const PlanCard = ({ plan, onSelect, onRegenerate, cardRef, isFinal, travelDetail
 
             <div className="relative h-48 w-full">
                 <img 
-                    src={imgSrc} 
+                    src={displaySrc} 
                     alt={plan.title} 
                     className="w-full h-full object-cover" 
                     crossOrigin="anonymous"
@@ -457,6 +457,19 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ planContent, onRestart, onSel
             <h1 className="text-5xl font-bold text-[#8C1007] dark:text-[#E18C44] mt-2">Here is your plan</h1>
             <p className="text-lg text-[#660B05] dark:text-slate-300 mt-2">Based on your answers, we've found a couple of spots we think you'll love.</p>
         </div>
+
+        {recommendation && (
+            <div className="w-full max-w-3xl mx-auto mb-8 animate-slide-in" style={{ animationDelay: '100ms' }}>
+                <div className="bg-yellow-50 dark:bg-slate-700/50 p-4 rounded-xl shadow-md flex items-center gap-x-4 border border-yellow-200 dark:border-slate-600">
+                    <div className="text-2xl text-yellow-500 dark:text-yellow-400 flex-shrink-0">
+                        <TipIcon />
+                    </div>
+                    <p className="text-base font-semibold text-[#3E0703] dark:text-slate-200">
+                        {recommendation.replace('Recommendation:', '').trim()}
+                    </p>
+                </div>
+            </div>
+        )}
 
         <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-stretch animate-slide-in">
             {plans.map((plan, index) => (

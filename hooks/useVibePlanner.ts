@@ -44,7 +44,8 @@ export const useVibePlanner = ({ setPlanHistory }: UseVibePlannerProps) => {
   }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    // Fix: Replaced NodeJS.Timeout with ReturnType<typeof setTimeout> to resolve a type error in browser environments. This ensures compatibility with web APIs for setInterval/clearInterval.
+    let timer: ReturnType<typeof setTimeout>;
     if (appState === 'RATE_LIMITED' && rateLimitTimeLeft > 0) {
       timer = setInterval(() => {
         setRateLimitTimeLeft(prev => Math.max(0, prev - 1000));
