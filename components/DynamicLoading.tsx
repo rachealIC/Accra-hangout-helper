@@ -99,11 +99,11 @@ const DynamicLoading = () => {
 
   return (
     <div className="relative z-10 w-full flex flex-col items-center justify-center">
-      <div className="w-full h-40 overflow-x-hidden relative">
+      <div className="w-full h-36 overflow-x-hidden relative">
         {animation}
       </div>
       <div className="mt-4 text-center max-w-md mx-auto h-24 flex items-center justify-center">
-        <p className={`text-[#8C1007] dark:text-[#E18C44] text-lg transition-opacity duration-500 ${isTextFading ? 'opacity-0' : 'opacity-100'}`}>
+        <p className={`text-[#8C1007] dark:text-[#E18C44] text-xl transition-opacity duration-500 ${isTextFading ? 'opacity-0' : 'opacity-100'}`}>
           {currentText}
         </p>
       </div>

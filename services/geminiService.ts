@@ -116,7 +116,7 @@ export async function generatePlanOptions(params: HangoutParams): Promise<string
   
       For each of the two options, provide the following:
       1. The specific name of the main venue or location for the plan.
-      2. A publicly accessible, high-quality, royalty-free image URL representing the plan (e.g., from unsplash.com). If you cannot find a suitable image, leave this field empty.
+      2. A publicly accessible, high-quality, royalty-free image URL representing the plan. Use your search capabilities to find a real photograph of the suggested venue or one that accurately represents the activity (e.g., from Unsplash, Pexels, or Google Images with usage rights). Prioritize real photos of the location. If a good, royalty-free image cannot be found, leave this field empty.
       3. The Vibe Category for the plan, which MUST be one of the following: "Relax & Unwind", "Food & Nightlife", "Rich Kids Sports", "Active & Adventure", "Movies & Plays", "Romantic Date", "Picnic & Parks".
       4. A specific, searchable location for the venue. This must be a full address or a well-known landmark name that can be accurately found on Google Maps (e.g., "Republic Bar & Grill, Osu, Accra" or "Kwame Nkrumah Memorial Park & Mausoleum"). Do NOT just provide a general neighborhood.
       5. The Google Maps rating (e.g., "Rating: 4.5/5 stars"). If unavailable, state "Rating: Not available".
@@ -180,47 +180,7 @@ export async function generatePlanOptions(params: HangoutParams): Promise<string
       const initialText = response.text;
       if (!initialText) throw new Error('No content generated.');
   
-      const parts = initialText.split('---').map(p => p.trim());
-      const recommendation = parts.length > 2 ? parts.pop() : '';
-      const planStrings = parts.filter(Boolean);
-  
-      const processedPlanStrings = await Promise.all(planStrings.map(async (planString) => {
-          const lines = planString.split('\n');
-          const imageUrlLine = lines.find(line => line.startsWith('Image URL:'));
-          const imageUrl = imageUrlLine ? imageUrlLine.replace('Image URL:', '').trim() : '';
-  
-          if (!imageUrl) {
-              const titleLine = lines.find(line => line.startsWith('Title:'));
-              const title = titleLine ? titleLine.replace('Title:', '').trim() : 'a fun place in Accra';
-              
-              const descriptionLine = lines.find(line => line.startsWith('Description:'));
-              const description = descriptionLine ? descriptionLine.replace('Description:', '').trim() : 'a great vibe';
-  
-              const imageGenPrompt = `A vibrant, photorealistic image of "${title}" in Accra, Ghana, capturing the essence of this vibe: "${description}". The image should be high-quality and suitable for a travel planner.`;
-  
-              try {
-                  const imageResponse = await ai.models.generateContent({
-                      model: 'gemini-2.5-flash-image',
-                      contents: { parts: [{ text: imageGenPrompt }] },
-                      config: { responseModalities: [Modality.IMAGE] },
-                  });
-                  for (const part of imageResponse.candidates[0].content.parts) {
-                      if (part.inlineData) {
-                          const base64ImageBytes: string = part.inlineData.data;
-                          const dataUri = `data:image/png;base64,${base64ImageBytes}`;
-                          return lines.map(line => line.startsWith('Image URL:') ? `Image URL: ${dataUri}` : line).join('\n');
-                      }
-                  }
-              } catch (genError) {
-                  console.error(`Failed to generate image for "${title}":`, genError);
-                  return planString;
-              }
-          }
-          return planString;
-      }));
-  
-      const finalContent = [processedPlanStrings.join('\n---\n'), recommendation].filter(Boolean).join('\n---\n');
-      return finalContent;
+      return initialText;
     } catch (error) {
       console.error('Error generating plan options:', error);
       throw new Error('Failed to generate hangout options. Please try again.');

@@ -8,7 +8,7 @@ interface WelcomeScreenProps {
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-4 z-10 animate-slide-in">
-      <div className="relative w-full h-40 md:h-48">
+      <div className="relative w-full h-36">
         <LandingTrotro />
       </div>
       <div className="max-w-4xl mx-auto">
